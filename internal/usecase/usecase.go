@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"intern-bcc/internal/repository"
+	"intern-bcc/pkg/jwt"
 )
 
 type Usecase struct {
@@ -10,10 +11,11 @@ type Usecase struct {
 
 type InitParam struct {
 	Repository *repository.Repository
+	JWT        jwt.IJwt
 }
 
 func NewUsecase(param InitParam) *Usecase {
-	userUsecase := NewUserUsecase(param.Repository)
+	userUsecase := NewUserUsecase(param.Repository.UserRepository, param.JWT)
 
 	return &Usecase{
 		UserUsecase: userUsecase,
