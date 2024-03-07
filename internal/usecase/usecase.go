@@ -7,6 +7,7 @@ import (
 
 type Usecase struct {
 	UserUsecase IUserUsecase
+	MerchantUsecase IMerchantUsecase
 }
 
 type InitParam struct {
@@ -16,8 +17,10 @@ type InitParam struct {
 
 func NewUsecase(param InitParam) *Usecase {
 	userUsecase := NewUserUsecase(param.Repository.UserRepository, param.JWT)
+	merchantUsecase := NewMerchantUsecase(param.Repository.MerchantRepository, param.JWT)
 
 	return &Usecase{
 		UserUsecase: userUsecase,
+		MerchantUsecase: merchantUsecase,
 	}
 }

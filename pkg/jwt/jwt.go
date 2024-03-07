@@ -1,17 +1,22 @@
 package jwt
 
 import (
+	"errors"
+	"intern-bcc/domain"
 	"log"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
 type IJwt interface {
 	GenerateToken(userId uuid.UUID) (string, error)
+	ValidateToken(tokenString string) (uuid.UUID, error)
+	GetLoginUser(ctx *gin.Context) (domain.Users, error)
 }
 
 type jsonWebToken struct {
@@ -51,4 +56,33 @@ func (j *jsonWebToken) GenerateToken(userId uuid.UUID) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func (j *jsonWebToken) ValidateToken(tokenString string) (uuid.UUID, error) {
+	var userId uuid.UUID
+	var claims Claims
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(j.SecretKey), nil
+	})
+
+	if err != nil {
+		return userId, err
+	}
+
+	if !token.Valid {
+		return userId, err
+	}
+
+	userId = claims.UserId
+
+	return userId, nil
+}
+
+func (j *jsonWebToken) GetLoginUser(ctx *gin.Context) (domain.Users, error) {
+	user, ok := ctx.Get("user")
+	if !ok {
+		return domain.Users{}, errors.New("failed to get user")
+	}
+
+	return user.(domain.Users), nil
 }

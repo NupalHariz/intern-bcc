@@ -7,6 +7,7 @@ import (
 	"intern-bcc/pkg/infrastucture"
 	"intern-bcc/pkg/infrastucture/database"
 	"intern-bcc/pkg/jwt"
+	"intern-bcc/pkg/middleware"
 )
 
 func main() {
@@ -15,10 +16,11 @@ func main() {
 	database.Migrate()
 
 	jwt := jwt.JwtInit()
-
+	
 	repository := repository.NewRepository(database.DB)
 	usecase := usecase.NewUsecase(usecase.InitParam{Repository: repository, JWT: jwt})
-	rest := rest.NewRest(usecase)
+	middleware := middleware.MiddlerwareInit(jwt, usecase)
+	rest := rest.NewRest(usecase, middleware)
 
 	rest.UserEndpoint()
 

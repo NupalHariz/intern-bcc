@@ -12,6 +12,7 @@ import (
 )
 
 type IUserUsecase interface {
+	GetUser(param domain.UserParam) (domain.Users, any)
 	Register(userRequest domain.UserRequest) any
 	Login(userLogin domain.UserLogin) (domain.LoginResponse, any)
 }
@@ -26,6 +27,20 @@ func NewUserUsecase(userRepository repository.IUserRepository, jwt jwt.IJwt) IUs
 		userRepository: userRepository,
 		jwt:            jwt,
 	}
+}
+
+func (u *UserUsecase) GetUser(param domain.UserParam) (domain.Users, any) {
+	var user domain.Users
+	err := u.userRepository.GetUser(&user, param)
+	if err != nil {
+		return user, response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "failed to get user",
+			Err:     err,
+		}
+	}
+
+	return user, nil
 }
 
 func (u *UserUsecase) Register(userRequest domain.UserRequest) any {
@@ -65,7 +80,7 @@ func (u *UserUsecase) Login(userLogin domain.UserLogin) (domain.LoginResponse, a
 	if err != nil {
 		return domain.LoginResponse{}, response.ErrorObject{
 			Code:    http.StatusNotFound,
-			Message: "email or password invalid",
+			Message: "email or invalid",
 			Err:     err,
 		}
 	}
@@ -74,7 +89,7 @@ func (u *UserUsecase) Login(userLogin domain.UserLogin) (domain.LoginResponse, a
 	if err != nil {
 		return domain.LoginResponse{}, response.ErrorObject{
 			Code:    http.StatusNotFound,
-			Message: "email or password invalid",
+			Message: " or password invalid",
 			Err:     err,
 		}
 	}
@@ -83,7 +98,7 @@ func (u *UserUsecase) Login(userLogin domain.UserLogin) (domain.LoginResponse, a
 	if err != nil {
 		return domain.LoginResponse{}, response.ErrorObject{
 			Code:    http.StatusInternalServerError,
-			Message: "faield to generate jwt token",
+			Message: "failed to generate jwt token",
 			Err:     err,
 		}
 	}
