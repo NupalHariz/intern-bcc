@@ -35,5 +35,3 @@ func (m *Middleware) Authentication(c *gin.Context) {
 	c.Set("user", user)
 	c.Next()
 }
-
-

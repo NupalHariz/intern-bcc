@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type IMerchantRepository interface{
+type IMerchantRepository interface {
 	CreateMerchant(newMerchant *domain.Merchants) error
 }
 
@@ -14,7 +14,7 @@ type MerchantRepository struct {
 	db *gorm.DB
 }
 
-func NewMerchantRepository(db *gorm.DB) IMerchantRepository{
+func NewMerchantRepository(db *gorm.DB) IMerchantRepository {
 	return &MerchantRepository{db}
 }
 

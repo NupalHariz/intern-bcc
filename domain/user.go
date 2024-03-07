@@ -7,7 +7,7 @@ import (
 )
 
 type Users struct {
-	Id             uuid.UUID `json:"-" gorm:"primary key"`
+	Id             uuid.UUID `json:"-" gorm:"type:varchar(36);primary key"`
 	Username       string    `json:"username"`
 	Email          string    `json:"email" gorm:"unique"`
 	Password       string    `json:"password"`
@@ -15,6 +15,7 @@ type Users struct {
 	ProfilePicture string    `json:"-"`
 	CreatedAt      time.Time `json:"-"`
 	UpdatedAt      time.Time `json:"-"`
+	Merchant       Merchants `json:"-"  gorm:"foreignKey:user_id;references:id"`
 }
 
 type UserRequest struct {

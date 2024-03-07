@@ -18,7 +18,7 @@ func (r *Rest) CreateMerchant(c *gin.Context){
 	}
 
 	errorObject := r.usecase.MerchantUsecase.CreateMerchant(c, merchantRequest)
-	if err != nil {
+	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
 		return
