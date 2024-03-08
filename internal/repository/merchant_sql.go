@@ -54,6 +54,7 @@ func (r *MerchantRepository) UpdateMerchant(updateMerchant *domain.Merchants) er
 		"City":        updateMerchant.City,
 		"PhoneNumber": updateMerchant.PhoneNumber,
 		"Instagram":   updateMerchant.Instagram,
+		"IsActive" : updateMerchant.IsActive,
 	}).Error
 	if err != nil {
 		fmt.Println(err)

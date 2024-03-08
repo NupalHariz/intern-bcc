@@ -17,7 +17,7 @@ type InitParam struct {
 
 func NewUsecase(param InitParam) *Usecase {
 	userUsecase := NewUserUsecase(param.Repository.UserRepository, param.JWT)
-	merchantUsecase := NewMerchantUsecase(param.Repository.MerchantRepository, param.JWT)
+	merchantUsecase := NewMerchantUsecase(param.Repository.MerchantRepository, param.Repository.MerchantRedis , param.JWT)
 
 	return &Usecase{
 		UserUsecase: userUsecase,

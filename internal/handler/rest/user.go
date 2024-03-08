@@ -24,7 +24,7 @@ func (r *Rest) Register(c *gin.Context) {
 		return
 	}
 
-	response.Succes(c, "success create account", nil)
+	response.Success(c, "success create account", nil)
 }
 
 func (r *Rest) Login(c *gin.Context) {
@@ -43,5 +43,5 @@ func (r *Rest) Login(c *gin.Context) {
 		return
 	}
 
-	response.Succes(c, "login success", loginRespone)
+	response.Success(c, "login success", loginRespone)
 }

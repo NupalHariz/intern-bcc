@@ -19,7 +19,7 @@ func main() {
 
 	jwt := jwt.JwtInit()
 
-	repository := repository.NewRepository(database.DB)
+	repository := repository.NewRepository(database.DB, cache.RDB)
 	usecase := usecase.NewUsecase(usecase.InitParam{Repository: repository, JWT: jwt})
 	middleware := middleware.MiddlerwareInit(jwt, usecase)
 	rest := rest.NewRest(usecase, middleware)

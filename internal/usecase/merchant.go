@@ -1,11 +1,16 @@
 package usecase
 
 import (
+	"context"
+	"errors"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
+	"intern-bcc/pkg/gomail"
 	"intern-bcc/pkg/jwt"
 	"intern-bcc/pkg/response"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -13,22 +18,25 @@ import (
 
 type IMerchantUsecase interface {
 	CreateMerchant(c *gin.Context, merchantRequest domain.MerchantRequest) any
+	SendOtp(c *gin.Context, ctx context.Context) any
+	VerifyOtp(c *gin.Context, ctx context.Context, verifyOtp domain.MerchantVerify) any
 }
 
 type MerchantUsecase struct {
+	merchantRedis      repository.IMerchantRedis
 	merchantRepository repository.IMerchantRepository
 	jwtAuth            jwt.IJwt
 }
 
-func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, jwtAuth jwt.IJwt) IMerchantUsecase {
+func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, merchantRedis repository.IMerchantRedis, jwtAuth jwt.IJwt) IMerchantUsecase {
 	return &MerchantUsecase{
+		merchantRedis:      merchantRedis,
 		merchantRepository: merchantRepository,
 		jwtAuth:            jwtAuth,
 	}
 }
 
 func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.MerchantRequest) any {
-	var user domain.Users
 	user, err := u.jwtAuth.GetLoginUser(c)
 	if err != nil {
 		return response.ErrorObject{
@@ -46,7 +54,7 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err == nil {
 		merchant := domain.Merchants{
-			Id: merchant.Id,
+			Id:          merchant.Id,
 			StoreName:   merchantRequest.StoreName,
 			University:  merchantRequest.University,
 			Faculty:     merchantRequest.Faculty,
@@ -59,9 +67,9 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 		err = u.merchantRepository.UpdateMerchant(&merchant)
 		if err != nil {
 			return response.ErrorObject{
-				Code: http.StatusInternalServerError,
+				Code:    http.StatusInternalServerError,
 				Message: "error occured when update account",
-				Err: err,
+				Err:     err,
 			}
 		}
 
@@ -84,6 +92,91 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 		return response.ErrorObject{
 			Code:    http.StatusInternalServerError,
 			Message: "an error occured when create account",
+			Err:     err,
+		}
+	}
+
+	return nil
+}
+
+func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
+	user, err := u.jwtAuth.GetLoginUser(c)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "account not found",
+			Err:     err,
+		}
+	}
+
+	otp := rand.Intn(999999-100000) + 100000
+	otpString := strconv.Itoa(otp)
+
+	err = u.merchantRedis.SetOTP(ctx, user.Id, otpString)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "an error occured when save otp to database",
+			Err:     err,
+		}
+	}
+
+	err = gomail.SendGoMail(otpString, user.Email)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "failed to send otp email",
+			Err:     err,
+		}
+	}
+
+	return nil
+}
+
+func (u *MerchantUsecase) VerifyOtp(c *gin.Context, ctx context.Context, verifyOtp domain.MerchantVerify) any {
+	user, err := u.jwtAuth.GetLoginUser(c)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "account not found",
+			Err:     err,
+		}
+	}
+
+	stringOtp, err := u.merchantRedis.GetOTP(ctx, user.Id)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "an error occured when getting otp from redis",
+			Err:     err,
+		}
+	}
+
+	if verifyOtp.VerifyOtp != stringOtp {
+		return response.ErrorObject{
+			Code:    http.StatusUnauthorized,
+			Message: "invalid token",
+			Err:     errors.New("wrong token"),
+		}
+	}
+
+	var merchant domain.Merchants
+	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "an error occured when getting merchant",
+			Err:     err,
+		}
+	}
+
+	merchant.IsActive = true
+
+	err = u.merchantRepository.UpdateMerchant(&merchant)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "error occured when update account",
 			Err:     err,
 		}
 	}

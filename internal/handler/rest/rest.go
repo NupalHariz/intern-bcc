@@ -30,6 +30,8 @@ func (r *Rest) UserEndpoint() {
 
 	merchant := routerGroup.Group("/merchant")
 	merchant.POST("/", r.middleware.Authentication, r.CreateMerchant)
+	merchant.GET("/verify", r.middleware.Authentication, r.SendOtp)
+	merchant.PUT("/verify", r.middleware.Authentication, r.VerifyOtp)
 }
 
 
