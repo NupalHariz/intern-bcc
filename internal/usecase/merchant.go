@@ -42,6 +42,32 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 		merchantRequest.StoreName = strings.Split(user.Email, "@")[0] + " Store's"
 	}
 
+	var merchant domain.Merchants
+	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
+	if err == nil {
+		merchant := domain.Merchants{
+			Id: merchant.Id,
+			StoreName:   merchantRequest.StoreName,
+			University:  merchantRequest.University,
+			Faculty:     merchantRequest.Faculty,
+			Province:    merchantRequest.Province,
+			City:        merchantRequest.City,
+			PhoneNumber: merchantRequest.PhoneNumber,
+			Instagram:   merchantRequest.Instagram,
+		}
+
+		err = u.merchantRepository.UpdateMerchant(&merchant)
+		if err != nil {
+			return response.ErrorObject{
+				Code: http.StatusInternalServerError,
+				Message: "error occured when update account",
+				Err: err,
+			}
+		}
+
+		return nil
+	}
+
 	newMerchant := domain.Merchants{
 		UserId:      user.Id,
 		StoreName:   merchantRequest.StoreName,
