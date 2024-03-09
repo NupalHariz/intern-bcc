@@ -1,24 +1,17 @@
 package middleware
 
-import (
-	"intern-bcc/internal/usecase"
-	"intern-bcc/pkg/jwt"
+// type IMiddleware interface {
+// 	Authentication(c *gin.Context)
+// }
 
-	"github.com/gin-gonic/gin"
-)
+// type Middleware struct {
+// 	jwtAuth jwt.IJwt
+// 	usecase *usecase.Usecase
+// }
 
-type IMiddleware interface {
-	Authentication(c *gin.Context)
-}
-
-type Middleware struct {
-	jwtAuth jwt.IJwt
-	usecase *usecase.Usecase
-}
-
-func MiddlerwareInit(jwtAuth jwt.IJwt, usecase *usecase.Usecase) IMiddleware {
-	return &Middleware{
-		jwtAuth: jwtAuth,
-		usecase: usecase,
-	}
-}
+// func MiddlerwareInit(jwtAuth jwt.IJwt, usecase *usecase.Usecase) IMiddleware {
+// 	return &Middleware{
+// 		jwtAuth: jwtAuth,
+// 		usecase: usecase,
+// 	}
+// }

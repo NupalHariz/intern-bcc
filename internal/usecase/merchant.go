@@ -25,24 +25,33 @@ type IMerchantUsecase interface {
 type MerchantUsecase struct {
 	merchantRedis      repository.IMerchantRedis
 	merchantRepository repository.IMerchantRepository
-	jwtAuth            jwt.IJwt
+	userRepository repository.IUserRepository
 }
 
-func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, merchantRedis repository.IMerchantRedis, jwtAuth jwt.IJwt) IMerchantUsecase {
+func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, merchantRedis repository.IMerchantRedis, userRepository repository.IUserRepository) IMerchantUsecase {
 	return &MerchantUsecase{
 		merchantRedis:      merchantRedis,
 		merchantRepository: merchantRepository,
-		jwtAuth:            jwtAuth,
+		userRepository: userRepository,
 	}
 }
 
 func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.MerchantRequest) any {
-	user, err := u.jwtAuth.GetLoginUser(c)
+	userId, err := jwt.GetLoginUserId(c)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,
-			Message: "failed to get account",
+			Message: "failed to get user id",
 			Err:     err,
+		}
+	}
+	var user domain.Users
+	err = u.userRepository.GetUser(&user, domain.UserParam{Id: userId})
+	if err != nil {
+		return response.ErrorObject {
+			Code: http.StatusNotFound,
+			Message: "failed to get user",
+			Err: err,
 		}
 	}
 
@@ -100,12 +109,21 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 }
 
 func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
-	user, err := u.jwtAuth.GetLoginUser(c)
+	userId, err := jwt.GetLoginUserId(c)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,
-			Message: "account not found",
+			Message: "failed to get user id",
 			Err:     err,
+		}
+	}
+	var user domain.Users
+	err = u.userRepository.GetUser(&user, domain.UserParam{Id: userId})
+	if err != nil {
+		return response.ErrorObject {
+			Code: http.StatusNotFound,
+			Message: "failed to get user",
+			Err: err,
 		}
 	}
 
@@ -134,12 +152,21 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
 }
 
 func (u *MerchantUsecase) VerifyOtp(c *gin.Context, ctx context.Context, verifyOtp domain.MerchantVerify) any {
-	user, err := u.jwtAuth.GetLoginUser(c)
+	userId, err := jwt.GetLoginUserId(c)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,
-			Message: "account not found",
+			Message: "failed to get user id",
 			Err:     err,
+		}
+	}
+	var user domain.Users
+	err = u.userRepository.GetUser(&user, domain.UserParam{Id: userId})
+	if err != nil {
+		return response.ErrorObject {
+			Code: http.StatusNotFound,
+			Message: "failed to get user",
+			Err: err,
 		}
 	}
 

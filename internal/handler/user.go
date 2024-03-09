@@ -1,14 +1,23 @@
-package rest
+package handler
 
 import (
 	"intern-bcc/domain"
+	"intern-bcc/internal/usecase"
 	"intern-bcc/pkg/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func (r *Rest) Register(c *gin.Context) {
+type UserHandler struct {
+	userUsecase usecase.IUserUsecase
+}
+
+func NewUserHandler(userUsecase usecase.IUserUsecase) *UserHandler {
+	return &UserHandler{userUsecase}
+}
+
+func (h *UserHandler) Register(c *gin.Context) {
 	var userRequest domain.UserRequest
 
 	err := c.ShouldBindJSON(&userRequest)
@@ -17,7 +26,7 @@ func (r *Rest) Register(c *gin.Context) {
 		return
 	}
 
-	errorObject := r.usecase.UserUsecase.Register(userRequest)
+	errorObject := h.userUsecase.Register(userRequest)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
@@ -27,7 +36,7 @@ func (r *Rest) Register(c *gin.Context) {
 	response.Success(c, "success create account", nil)
 }
 
-func (r *Rest) Login(c *gin.Context) {
+func (h *UserHandler) Login(c *gin.Context) {
 	var userLogin domain.UserLogin
 
 	err := c.ShouldBindJSON(&userLogin)
@@ -36,7 +45,7 @@ func (r *Rest) Login(c *gin.Context) {
 		return
 	}
 
-	loginRespone, errorObject := r.usecase.UserUsecase.Login(userLogin)
+	loginRespone, errorObject := h.userUsecase.Login(userLogin)
 	if errorObject != nil{
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)

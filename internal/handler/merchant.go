@@ -1,14 +1,23 @@
-package rest
+package handler
 
 import (
 	"intern-bcc/domain"
+	"intern-bcc/internal/usecase"
 	"intern-bcc/pkg/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func (r *Rest) CreateMerchant(c *gin.Context) {
+type MerchantHandler struct {
+	merchantUsecase usecase.IMerchantUsecase
+}
+
+func NewMerchantHandler(merchantUsecase usecase.IMerchantUsecase) *MerchantHandler {
+	return &MerchantHandler{merchantUsecase}
+}
+
+func (h *MerchantHandler) CreateMerchant(c *gin.Context) {
 	var merchantRequest domain.MerchantRequest
 
 	err := c.ShouldBindJSON(&merchantRequest)
@@ -17,7 +26,7 @@ func (r *Rest) CreateMerchant(c *gin.Context) {
 		return
 	}
 
-	errorObject := r.usecase.MerchantUsecase.CreateMerchant(c, merchantRequest)
+	errorObject := h.merchantUsecase.CreateMerchant(c, merchantRequest)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
@@ -27,10 +36,10 @@ func (r *Rest) CreateMerchant(c *gin.Context) {
 	response.Success(c, "success to create merchant, please verify your merchant", nil)
 }
 
-func (r *Rest) SendOtp(c *gin.Context) {
+func (h *MerchantHandler) SendOtp(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	errorObject := r.usecase.MerchantUsecase.SendOtp(c, ctx)
+	errorObject := h.merchantUsecase.SendOtp(c, ctx)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
@@ -40,7 +49,7 @@ func (r *Rest) SendOtp(c *gin.Context) {
 	response.Success(c, "please check your email for verification", nil)
 }
 
-func (r *Rest) VerifyOtp(c *gin.Context) {
+func (h *MerchantHandler) VerifyOtp(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var verifyOtp domain.MerchantVerify
@@ -50,7 +59,7 @@ func (r *Rest) VerifyOtp(c *gin.Context) {
 		return
 	}
 
-	errorObject := r.usecase.MerchantUsecase.VerifyOtp(c, ctx, verifyOtp)
+	errorObject := h.merchantUsecase.VerifyOtp(c, ctx, verifyOtp)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)

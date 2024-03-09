@@ -1,14 +1,15 @@
 package main
 
 import (
-	rest "intern-bcc/internal/handler/rest"
+	"intern-bcc/internal/handler"
 	"intern-bcc/internal/repository"
 	"intern-bcc/internal/usecase"
 	"intern-bcc/pkg/infrastucture"
 	"intern-bcc/pkg/infrastucture/cache"
 	"intern-bcc/pkg/infrastucture/database"
-	"intern-bcc/pkg/jwt"
-	"intern-bcc/pkg/middleware"
+	"intern-bcc/rest"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -17,14 +18,26 @@ func main() {
 	database.ConnectToDB()
 	database.Migrate()
 
-	jwt := jwt.JwtInit()
+	//Repository
+	merchantRepository := repository.NewMerchantRepository(database.DB)
+	merchantRedis := repository.NewMerchantRedis(cache.RDB)
+	userRepository := repository.NewUserRepository(database.DB)
 
-	repository := repository.NewRepository(database.DB, cache.RDB)
-	usecase := usecase.NewUsecase(usecase.InitParam{Repository: repository, JWT: jwt})
-	middleware := middleware.MiddlerwareInit(jwt, usecase)
-	rest := rest.NewRest(usecase, middleware)
+	//Usecase
+	merchantUsecase := usecase.NewMerchantUsecase(merchantRepository, merchantRedis, userRepository)
+	userUsecase := usecase.NewUserUsecase(userRepository)
 
-	rest.UserEndpoint()
+	//Handler
+	merchantHandler := handler.NewMerchantHandler(merchantUsecase)
+	userHandler := handler.NewUserHandler(userUsecase)
+
+	rest := rest.NewRest(gin.New())
+
+	rest.MerchantEndpoint(merchantHandler)
+	rest.UserEndpoint(userHandler)
 
 	rest.Run()
 }
+
+//CATATAN
+//Jangan lupa bikin text untuk OTP(text yang sekarang masih nyoba-nyoba)
