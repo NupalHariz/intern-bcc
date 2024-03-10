@@ -8,5 +8,6 @@ func Migrate() {
 		&domain.Categories{},
 		&domain.Products{},
 		&domain.Merchants{},
+		&domain.Mentors{},
 	)
 }

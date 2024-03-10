@@ -34,6 +34,13 @@ func (r *Rest) MerchantEndpoint(merchantHandler *handler.MerchantHandler) {
 	merchant.PUT("/verify", middleware.Authentication, merchantHandler.VerifyOtp)
 }
 
+func (r *Rest) MentorEndpoint(mentorHandler handler.MentorHandler) {
+	routerGroup := r.router.Group("api/v1")
+
+	mentor := routerGroup.Group("/mentor")
+	mentor.POST("/", middleware.Authentication, mentorHandler.CreateMentor)
+}
+
 func (r *Rest) Run() {
 	err := r.router.Run()
 	if err != nil {

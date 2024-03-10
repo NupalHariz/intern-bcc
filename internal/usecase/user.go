@@ -55,6 +55,7 @@ func (u *UserUsecase) Register(userRequest domain.UserRequest) any {
 		Id:       uuid.New(),
 		Username: userRequest.Username,
 		Email:    userRequest.Email,
+		IsAdmin: userRequest.IsAdmin,
 		Password: string(hashPassword),
 	}
 
@@ -92,7 +93,7 @@ func (u *UserUsecase) Login(userLogin domain.UserLogin) (domain.LoginResponse, a
 		}
 	}
 
-	tokenString, err := jwt.GenerateToken(user.Id)
+	tokenString, err := jwt.GenerateToken(user.Id, user.IsAdmin)
 	if err != nil {
 		return domain.LoginResponse{}, response.ErrorObject{
 			Code:    http.StatusInternalServerError,

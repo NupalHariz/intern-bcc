@@ -40,7 +40,7 @@ type Claims struct {
 //			ExpiredTime: time.Duration(expiredTime) * time.Hour,
 //		}
 //	}
-func GenerateToken(userId uuid.UUID) (string, error) {
+func GenerateToken(userId uuid.UUID, isAdmin bool) (string, error) {
 	expiredTime, err := strconv.Atoi(os.Getenv("JWT_EXP_TIME"))
 	secretKey := os.Getenv("SECRET_KEY")
 	if err != nil {
@@ -83,8 +83,8 @@ func ValidateToken(tokenString string) (uuid.UUID, error) {
 	return userId, nil
 }
 
-func GetLoginUserId(ctx *gin.Context) (uuid.UUID, error) {
-	userId, ok := ctx.Get("userId")
+func GetLoginUserId(c *gin.Context) (uuid.UUID, error) {
+	userId, ok := c.Get("userId")
 	if !ok {
 		return userId.(uuid.UUID), errors.New("failed to get user")
 	}
