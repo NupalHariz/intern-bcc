@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"intern-bcc/domain"
 	"log"
 	"os"
 	"strconv"
@@ -12,35 +13,36 @@ import (
 	"github.com/google/uuid"
 )
 
-// type IJwt interface {
-// 	GenerateToken(userId uuid.UUID) (string, error)
-// 	ValidateToken(tokenString string) (uuid.UUID, error)
-// 	GetLoginUser(ctx *gin.Context) (domain.Users, error)
-// }
+type IJwt interface {
+	GenerateToken(userId uuid.UUID) (string, error)
+	ValidateToken(tokenString string) (uuid.UUID, error)
+	GetLoginUser(ctx *gin.Context) (domain.Users, error)
+}
 
-// type jsonWebToken struct {
-// 	SecretKey   string
-// 	ExpiredTime time.Duration
-// }
+type jsonWebToken struct {
+	SecretKey   string
+	ExpiredTime time.Duration
+}
 
 type Claims struct {
 	UserId uuid.UUID
 	jwt.RegisteredClaims
 }
 
-// func JwtInit() IJwt {
-// 	secretKey := os.Getenv("SECRET_KEY")
-// 	expiredTime, err := strconv.Atoi(os.Getenv("JWT_EXP_TIME"))
-// 	if err != nil {
-// 		log.Fatal("failed to set jwt expired time")
-// 	}
+func JwtInit() IJwt {
+	secretKey := os.Getenv("SECRET_KEY")
+	expiredTime, err := strconv.Atoi(os.Getenv("JWT_EXP_TIME"))
+	if err != nil {
+		log.Fatal("failed to set jwt expired time")
+	}
 
-//		return &jsonWebToken{
-//			SecretKey:   secretKey,
-//			ExpiredTime: time.Duration(expiredTime) * time.Hour,
-//		}
-//	}
-func GenerateToken(userId uuid.UUID, isAdmin bool) (string, error) {
+	return &jsonWebToken{
+		SecretKey:   secretKey,
+		ExpiredTime: time.Duration(expiredTime) * time.Hour,
+	}
+}
+
+func (j *jsonWebToken) GenerateToken(userId uuid.UUID) (string, error) {
 	expiredTime, err := strconv.Atoi(os.Getenv("JWT_EXP_TIME"))
 	secretKey := os.Getenv("SECRET_KEY")
 	if err != nil {
@@ -63,7 +65,7 @@ func GenerateToken(userId uuid.UUID, isAdmin bool) (string, error) {
 	return tokenString, nil
 }
 
-func ValidateToken(tokenString string) (uuid.UUID, error) {
+func (j *jsonWebToken) ValidateToken(tokenString string) (uuid.UUID, error) {
 	var userId uuid.UUID
 	var claims Claims
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
@@ -83,11 +85,11 @@ func ValidateToken(tokenString string) (uuid.UUID, error) {
 	return userId, nil
 }
 
-func GetLoginUserId(c *gin.Context) (uuid.UUID, error) {
-	userId, ok := c.Get("userId")
+func (j *jsonWebToken)GetLoginUser(c *gin.Context) (domain.Users, error) {
+	user, ok := c.Get("user")
 	if !ok {
-		return userId.(uuid.UUID), errors.New("failed to get user")
+		return domain.Users{}, errors.New("failed to get user")
 	}
 
-	return userId.(uuid.UUID), nil
+	return user.(domain.Users), nil
 }

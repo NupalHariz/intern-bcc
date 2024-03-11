@@ -4,9 +4,13 @@ import (
 	"intern-bcc/internal/handler"
 	"intern-bcc/internal/repository"
 	"intern-bcc/internal/usecase"
+	"intern-bcc/pkg/gomail"
 	"intern-bcc/pkg/infrastucture"
 	"intern-bcc/pkg/infrastucture/cache"
 	"intern-bcc/pkg/infrastucture/database"
+	"intern-bcc/pkg/jwt"
+	"intern-bcc/pkg/middleware"
+	"intern-bcc/pkg/midtrans"
 	"intern-bcc/rest"
 
 	"github.com/gin-gonic/gin"
@@ -25,11 +29,19 @@ func main() {
 	mentorRepository := repository.NewMentorRepository(database.DB)
 	transactionRepository := repository.NewTransactionRepository(database.DB)
 
+	//pkg
+	jwt := jwt.JwtInit()
+	goMail := gomail.GoMailInit()
+	midTrans := midtrans.MidTransInit()
+
 	//Usecase
-	merchantUsecase := usecase.NewMerchantUsecase(merchantRepository, merchantRedis, userRepository)
-	userUsecase := usecase.NewUserUsecase(userRepository)
-	mentorUsecase := usecase.NewMentorUsecase(mentorRepository, userRepository)
-	transactionUsecase := usecase.NewTransactionRepository(transactionRepository, userRepository)
+	merchantUsecase := usecase.NewMerchantUsecase(merchantRepository, merchantRedis, jwt, goMail)
+	userUsecase := usecase.NewUserUsecase(userRepository, jwt)
+	mentorUsecase := usecase.NewMentorUsecase(mentorRepository, jwt)
+	transactionUsecase := usecase.NewTransactionRepository(transactionRepository, jwt, midTrans)
+
+	//Middleware
+	middleware := middleware.MiddlerwareInit(jwt, userUsecase)
 
 	//Handler
 	merchantHandler := handler.NewMerchantHandler(merchantUsecase)
@@ -37,11 +49,11 @@ func main() {
 	mentorHandler := handler.NewMentorHandler(mentorUsecase)
 	transactionHandler := handler.NewTransactionHandler(transactionUsecase)
 
-	rest := rest.NewRest(gin.New())
+	rest := rest.NewRest(gin.New(), userHandler, merchantHandler, mentorHandler, transactionHandler, middleware)
 
-	rest.MerchantEndpoint(merchantHandler)
-	rest.UserEndpoint(userHandler)
-	rest.MentorEndpoint(mentorHandler, transactionHandler)
+	rest.MerchantEndpoint()
+	rest.UserEndpoint()
+	rest.MentorEndpoint()
 
 	rest.Run()
 }

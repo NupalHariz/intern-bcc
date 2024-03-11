@@ -13,37 +13,30 @@ import (
 	"github.com/midtrans/midtrans-go/coreapi"
 )
 
-type ITransactionUsecase interface{
+type ITransactionUsecase interface {
 	CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (*coreapi.ChargeResponse, any)
 }
 
 type TransactionUsecase struct {
 	transactionRepository repository.ITransactionRepository
-	userRepository        repository.IUserRepository
+	jwt                   jwt.IJwt
+	midTrans              midtrans.IMidTrans
 }
 
-func NewTransactionRepository(transactionRepository repository.ITransactionRepository, userRepository repository.IUserRepository) ITransactionUsecase {
+func NewTransactionRepository(transactionRepository repository.ITransactionRepository, jwt jwt.IJwt, midTrans midtrans.IMidTrans) ITransactionUsecase {
 	return &TransactionUsecase{
 		transactionRepository: transactionRepository,
-		userRepository:        userRepository,
+		jwt:                   jwt,
+		midTrans:              midTrans,
 	}
 }
 
 func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (*coreapi.ChargeResponse, any) {
-	userId, err := jwt.GetLoginUserId(c)
+	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
 		return nil, response.ErrorObject{
 			Code:    http.StatusNotFound,
 			Message: "failed to get user id",
-			Err:     err,
-		}
-	}
-	var user domain.Users
-	err = u.userRepository.GetUser(&user, domain.UserParam{Id: userId})
-	if err != nil {
-		return nil, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get user",
 			Err:     err,
 		}
 	}
@@ -56,7 +49,7 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, tra
 		PaymentType: transactionRequest.PaymentType,
 	}
 
-	coreApiRes, err := midtrans.ChargeTransaction(newTransaction)
+	coreApiRes, err := u.midTrans.ChargeTransaction(newTransaction)
 	if err != nil {
 		return coreApiRes, response.ErrorObject{
 			Code:    http.StatusInternalServerError,

@@ -19,11 +19,13 @@ type IUserUsecase interface {
 
 type UserUsecase struct {
 	userRepository repository.IUserRepository
+	jwt jwt.IJwt
 }
 
-func NewUserUsecase(userRepository repository.IUserRepository) IUserUsecase {
+func NewUserUsecase(userRepository repository.IUserRepository, jwt jwt.IJwt) IUserUsecase {
 	return &UserUsecase{
 		userRepository: userRepository,
+		jwt: jwt,
 	}
 }
 
@@ -93,7 +95,7 @@ func (u *UserUsecase) Login(userLogin domain.UserLogin) (domain.LoginResponse, a
 		}
 	}
 
-	tokenString, err := jwt.GenerateToken(user.Id, user.IsAdmin)
+	tokenString, err := u.jwt.GenerateToken(user.Id)
 	if err != nil {
 		return domain.LoginResponse{}, response.ErrorObject{
 			Code:    http.StatusInternalServerError,

@@ -2,12 +2,21 @@ package middleware
 
 import (
 	"errors"
+	"intern-bcc/pkg/response"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func CheckAdmin(isAdmin bool) error {
-	if !isAdmin {
-		return errors.New("acced denied")
+func (m *Middleware) OnlyAdmin(c *gin.Context) {
+	user, err := m.jwtAuth.GetLoginUser(c)
+	if err != nil {
+		response.Failed(c, http.StatusNotFound, "failed to get account", err)
+		c.Abort()
+	}
+	if !user.IsAdmin {
+		response.Failed(c, http.StatusUnauthorized, "access denied", errors.New("only admin"))
 	}
 
-	return nil
+	c.Next()
 }

@@ -10,36 +10,48 @@ import (
 
 type Rest struct {
 	router *gin.Engine
+	userHandler *handler.UserHandler
+	merchantHandler *handler.MerchantHandler
+	mentorHandler *handler.MentorHandler
+	transactionHandler *handler.TransactionHandler
+	middleware middleware.IMiddleware
 }
 
-func NewRest(c *gin.Engine) *Rest {
+func NewRest(c *gin.Engine, userHandler *handler.UserHandler,
+	merchantHandler *handler.MerchantHandler, mentorHandler *handler.MentorHandler,
+	transactionHandler *handler.TransactionHandler, middleware middleware.IMiddleware) *Rest {
 	return &Rest{
 		router: gin.Default(),
+		userHandler: userHandler,
+		merchantHandler: merchantHandler,
+		mentorHandler: mentorHandler,
+		transactionHandler: transactionHandler,
+		middleware: middleware,
 	}
 }
 
-func (r *Rest) UserEndpoint(userHandler *handler.UserHandler) {
+func (r *Rest) UserEndpoint() {
 	routerGroup := r.router.Group("api/v1")
 
-	routerGroup.POST("/register", userHandler.Register)
-	routerGroup.POST("/login", userHandler.Login)
+	routerGroup.POST("/register", r.userHandler.Register)
+	routerGroup.POST("/login", r.userHandler.Login)
 }
 
-func (r *Rest) MerchantEndpoint(merchantHandler *handler.MerchantHandler) {
+func (r *Rest) MerchantEndpoint() {
 	routerGroup := r.router.Group("api/v1")
 
 	merchant := routerGroup.Group("/merchant")
-	merchant.POST("/", middleware.Authentication, merchantHandler.CreateMerchant)
-	merchant.GET("/verify", middleware.Authentication, merchantHandler.SendOtp)
-	merchant.PUT("/verify", middleware.Authentication, merchantHandler.VerifyOtp)
+	merchant.POST("/", r.middleware.Authentication, r.merchantHandler.CreateMerchant)
+	merchant.GET("/verify", r.middleware.Authentication, r.merchantHandler.SendOtp)
+	merchant.PUT("/verify", r.middleware.Authentication, r.merchantHandler.VerifyOtp)
 }
 
-func (r *Rest) MentorEndpoint(mentorHandler *handler.MentorHandler, transactionHandler *handler.TransactionHandler) {
+func (r *Rest) MentorEndpoint() {
 	routerGroup := r.router.Group("api/v1")
 
 	mentor := routerGroup.Group("/mentor")
-	mentor.POST("/", middleware.Authentication, mentorHandler.CreateMentor)
-	mentor.POST("/:mentorId/transaction", middleware.Authentication, transactionHandler.CreateTransaction)
+	mentor.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin , r.mentorHandler.CreateMentor)
+	mentor.POST("/:mentorId/transaction", r.middleware.Authentication, r.transactionHandler.CreateTransaction)
 
 }
 

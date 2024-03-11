@@ -8,10 +8,25 @@ import (
 	"github.com/midtrans/midtrans-go/coreapi"
 )
 
-func ChargeTransaction(newTransaction domain.Transactions) (*coreapi.ChargeResponse, error) {
+type IMidTrans interface {
+	ChargeTransaction(newTransaction domain.Transactions) (*coreapi.ChargeResponse, error)
+}
+
+type MidTrans struct{
+	serverKey string
+}
+
+func MidTransInit() IMidTrans {
 	serverKey := os.Getenv("MIDTRANS_SERVER_KEY")
+
+	return &MidTrans{
+		serverKey: serverKey,
+	}
+}
+
+func (m *MidTrans )ChargeTransaction(newTransaction domain.Transactions) (*coreapi.ChargeResponse, error) {
 	c := coreapi.Client{}
-	c.New(serverKey, midtrans.Sandbox)
+	c.New(m.serverKey, midtrans.Sandbox)
 
 	chargeReq := &coreapi.ChargeReq{
 		TransactionDetails: midtrans.TransactionDetails{

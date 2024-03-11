@@ -25,33 +25,27 @@ type IMerchantUsecase interface {
 type MerchantUsecase struct {
 	merchantRedis      repository.IMerchantRedis
 	merchantRepository repository.IMerchantRepository
-	userRepository repository.IUserRepository
+	jwt jwt.IJwt
+	goMail gomail.IGoMail
 }
 
-func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, merchantRedis repository.IMerchantRedis, userRepository repository.IUserRepository) IMerchantUsecase {
+func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, merchantRedis repository.IMerchantRedis,
+	jwt jwt.IJwt, goMail gomail.IGoMail) IMerchantUsecase {
 	return &MerchantUsecase{
 		merchantRedis:      merchantRedis,
 		merchantRepository: merchantRepository,
-		userRepository: userRepository,
+		jwt: jwt,
+		goMail: goMail,
 	}
 }
 
 func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.MerchantRequest) any {
-	userId, err := jwt.GetLoginUserId(c)
+	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,
 			Message: "failed to get user id",
 			Err:     err,
-		}
-	}
-	var user domain.Users
-	err = u.userRepository.GetUser(&user, domain.UserParam{Id: userId})
-	if err != nil {
-		return response.ErrorObject {
-			Code: http.StatusNotFound,
-			Message: "failed to get user",
-			Err: err,
 		}
 	}
 
@@ -109,21 +103,12 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 }
 
 func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
-	userId, err := jwt.GetLoginUserId(c)
+	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,
 			Message: "failed to get user id",
 			Err:     err,
-		}
-	}
-	var user domain.Users
-	err = u.userRepository.GetUser(&user, domain.UserParam{Id: userId})
-	if err != nil {
-		return response.ErrorObject {
-			Code: http.StatusNotFound,
-			Message: "failed to get user",
-			Err: err,
 		}
 	}
 
@@ -139,7 +124,7 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
 		}
 	}
 
-	err = gomail.SendGoMail(otpString, user.Email)
+	err = u.goMail.SendGoMail(otpString, user.Email)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusInternalServerError,
@@ -152,21 +137,12 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
 }
 
 func (u *MerchantUsecase) VerifyOtp(c *gin.Context, ctx context.Context, verifyOtp domain.MerchantVerify) any {
-	userId, err := jwt.GetLoginUserId(c)
+	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,
 			Message: "failed to get user id",
 			Err:     err,
-		}
-	}
-	var user domain.Users
-	err = u.userRepository.GetUser(&user, domain.UserParam{Id: userId})
-	if err != nil {
-		return response.ErrorObject {
-			Code: http.StatusNotFound,
-			Message: "failed to get user",
-			Err: err,
 		}
 	}
 

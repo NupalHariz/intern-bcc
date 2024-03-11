@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"errors"
-	"intern-bcc/pkg/jwt"
+	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
 	"strings"
@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Authentication(c *gin.Context) {
+func (m *Middleware) Authentication(c *gin.Context) {
 	bearer := c.GetHeader("Authorization")
 	if bearer == "" {
 		response.Failed(c, http.StatusUnauthorized, "token is empty", errors.New("need token"))
@@ -19,19 +19,19 @@ func Authentication(c *gin.Context) {
 	}
 
 	tokenString := strings.Split(bearer, " ")[1]
-	userId, err := jwt.ValidateToken(tokenString)
+	userId, err := m.jwtAuth.ValidateToken(tokenString)
 	if err != nil {
 		response.Failed(c, http.StatusUnauthorized, "failed to validate token", err)
 		c.Abort()
 		return
 	}
 
-	// user, errorObject := m.usecase.UserUsecase.GetUser(domain.UserParam{Id: userId})
-	// if errorObject != nil {
-	// 	errorObject := errorObject.(response.ErrorObject)
-	// 	response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
-	// }
+	user, errorObject := m.userUsecase.GetUser(domain.UserParam{Id: userId})
+	if errorObject != nil {
+		errorObject := errorObject.(response.ErrorObject)
+		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	}
 
-	c.Set("userId", userId)
+	c.Set("user", user)
 	c.Next()
 }
