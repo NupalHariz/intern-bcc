@@ -11,7 +11,7 @@ type Transactions struct {
 	UserId      uuid.UUID `json:"-"`
 	MentorId    int       `json:"-"`
 	Price       uint64    `json:"-"`
-	Status      bool      `json:"-"`
+	IsPayed     bool    `json:"-"`
 	PaymentType string    `json:"-"`
 	CreatedAt   time.Time `json:"-"`
 	PayedAt     time.Time `json:"-" gorm:"autoCreateTime;autoUpdateTime"`
@@ -20,6 +20,6 @@ type Transactions struct {
 }
 
 type TransactionRequest struct {
-	Price       uint64	`json:"price" binding:"required"`
-	PaymentType string	`json:"payment_type" binding:"required"`
+	Price       uint64 `json:"price" binding:"required"`
+	PaymentType string `json:"payment_type" binding:"required"`
 }

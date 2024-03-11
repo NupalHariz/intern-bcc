@@ -1,12 +1,14 @@
 package usecase
 
 import (
+	"errors"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/jwt"
 	"intern-bcc/pkg/midtrans"
 	"intern-bcc/pkg/response"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -15,6 +17,7 @@ import (
 
 type ITransactionUsecase interface {
 	CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (*coreapi.ChargeResponse, any)
+	VerifyTransaction(payload map[string]interface{}) any
 }
 
 type TransactionUsecase struct {
@@ -68,4 +71,67 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, tra
 	}
 
 	return coreApiRes, err
+}
+
+func (u *TransactionUsecase) VerifyTransaction(payload map[string]interface{}) any {
+	transactionIdString, exist := payload["order_id"].(string)
+	if !exist {
+		return response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "transaction not found",
+			Err:     errors.New("can't find the transaction"),
+		}
+	}
+
+	success, err := u.midTrans.VerifyPayment(transactionIdString)
+	if !success {
+		return response.ErrorObject{
+			Code:    http.StatusBadRequest,
+			Message: "transaction failed",
+			Err:     err,
+		}
+	}
+
+	transactionId, err := uuid.Parse(transactionIdString)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "failed to parsing string to uuid",
+			Err:     err,
+		}
+	}
+
+	var transaction domain.Transactions
+	transaction.Id = transactionId
+	err = u.transactionRepository.GetTransaction(&transaction)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "transaction not found",
+			Err:     err,
+		}
+	}
+
+	layout := "2006-01-02 15:04:05"
+	paymentTime, err := time.Parse(layout, payload["transaction_time"].(string))
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "failed to parsing string to time",
+			Err:     err,
+		}
+	}
+	transaction.IsPayed = true
+	transaction.PayedAt = paymentTime
+
+	err = u.transactionRepository.UpdateTransaction(&transaction)
+	if err != nil {
+		return response.ErrorObject{
+			Code: http.StatusInternalServerError,
+			Message: "an error occured when update transaction",
+			Err: err,
+		}
+	}
+
+	return nil
 }

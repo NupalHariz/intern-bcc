@@ -1,6 +1,7 @@
 package midtrans
 
 import (
+	"errors"
 	"intern-bcc/domain"
 	"os"
 
@@ -10,9 +11,10 @@ import (
 
 type IMidTrans interface {
 	ChargeTransaction(newTransaction domain.Transactions) (*coreapi.ChargeResponse, error)
+	VerifyPayment(transctionIdString string) (bool, error)
 }
 
-type MidTrans struct{
+type MidTrans struct {
 	serverKey string
 }
 
@@ -24,7 +26,7 @@ func MidTransInit() IMidTrans {
 	}
 }
 
-func (m *MidTrans )ChargeTransaction(newTransaction domain.Transactions) (*coreapi.ChargeResponse, error) {
+func (m *MidTrans) ChargeTransaction(newTransaction domain.Transactions) (*coreapi.ChargeResponse, error) {
 	c := coreapi.Client{}
 	c.New(m.serverKey, midtrans.Sandbox)
 
@@ -68,3 +70,23 @@ func (m *MidTrans )ChargeTransaction(newTransaction domain.Transactions) (*corea
 	return coreApiRes, nil
 }
 
+func (m *MidTrans) VerifyPayment(transctionIdString string) (bool, error) {
+	c := coreapi.Client{}
+	c.New(m.serverKey, midtrans.Sandbox)
+
+	transactionStatusRespone, err := c.CheckTransaction(transctionIdString)
+	if err != nil {
+		return false, err
+	}
+
+	switch transactionStatusRespone.TransactionStatus {
+	case "settlement":
+		return true, nil
+	case "expire":
+		return false, errors.New("payment already expired")
+	case "failure":
+		return false, errors.New("an error occured during transaction process")
+	}
+
+	return false, nil
+}

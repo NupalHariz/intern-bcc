@@ -9,24 +9,24 @@ import (
 )
 
 type Rest struct {
-	router *gin.Engine
-	userHandler *handler.UserHandler
-	merchantHandler *handler.MerchantHandler
-	mentorHandler *handler.MentorHandler
+	router             *gin.Engine
+	userHandler        *handler.UserHandler
+	merchantHandler    *handler.MerchantHandler
+	mentorHandler      *handler.MentorHandler
 	transactionHandler *handler.TransactionHandler
-	middleware middleware.IMiddleware
+	middleware         middleware.IMiddleware
 }
 
 func NewRest(c *gin.Engine, userHandler *handler.UserHandler,
 	merchantHandler *handler.MerchantHandler, mentorHandler *handler.MentorHandler,
 	transactionHandler *handler.TransactionHandler, middleware middleware.IMiddleware) *Rest {
 	return &Rest{
-		router: gin.Default(),
-		userHandler: userHandler,
-		merchantHandler: merchantHandler,
-		mentorHandler: mentorHandler,
+		router:             gin.Default(),
+		userHandler:        userHandler,
+		merchantHandler:    merchantHandler,
+		mentorHandler:      mentorHandler,
 		transactionHandler: transactionHandler,
-		middleware: middleware,
+		middleware:         middleware,
 	}
 }
 
@@ -50,8 +50,9 @@ func (r *Rest) MentorEndpoint() {
 	routerGroup := r.router.Group("api/v1")
 
 	mentor := routerGroup.Group("/mentor")
-	mentor.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin , r.mentorHandler.CreateMentor)
+	mentor.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.mentorHandler.CreateMentor)
 	mentor.POST("/:mentorId/transaction", r.middleware.Authentication, r.transactionHandler.CreateTransaction)
+	mentor.POST("/payment-callback", r.transactionHandler.VerifyTransaction)
 
 }
 

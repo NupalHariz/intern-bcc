@@ -29,7 +29,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
 	}
 
-	coreApiRes, errorObject := h.transactionUsecase.CreateTransaction(c, mentorId ,transactionRequest)
+	coreApiRes, errorObject := h.transactionUsecase.CreateTransaction(c, mentorId, transactionRequest)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
@@ -37,5 +37,22 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 	}
 
 	response.Success(c, "waiting for payment", coreApiRes)
+}
 
+func (h *TransactionHandler) VerifyTransaction(c *gin.Context) {
+	var payLoad map[string]interface{}
+
+	err := c.ShouldBindJSON(&payLoad)
+	if err != nil {
+		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+	}
+
+	errorObject := h.transactionUsecase.VerifyTransaction(payLoad)
+	if errorObject != nil {
+		errorObject := errorObject.(response.ErrorObject)
+		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+		return
+	}
+
+	response.Success(c, "payment success", nil)
 }
