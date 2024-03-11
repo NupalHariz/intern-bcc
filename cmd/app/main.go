@@ -23,22 +23,25 @@ func main() {
 	merchantRedis := repository.NewMerchantRedis(cache.RDB)
 	userRepository := repository.NewUserRepository(database.DB)
 	mentorRepository := repository.NewMentorRepository(database.DB)
+	transactionRepository := repository.NewTransactionRepository(database.DB)
 
 	//Usecase
 	merchantUsecase := usecase.NewMerchantUsecase(merchantRepository, merchantRedis, userRepository)
 	userUsecase := usecase.NewUserUsecase(userRepository)
 	mentorUsecase := usecase.NewMentorUsecase(mentorRepository, userRepository)
+	transactionUsecase := usecase.NewTransactionRepository(transactionRepository, userRepository)
 
 	//Handler
 	merchantHandler := handler.NewMerchantHandler(merchantUsecase)
 	userHandler := handler.NewUserHandler(userUsecase)
 	mentorHandler := handler.NewMentorHandler(mentorUsecase)
+	transactionHandler := handler.NewTransactionHandler(transactionUsecase)
 
 	rest := rest.NewRest(gin.New())
 
 	rest.MerchantEndpoint(merchantHandler)
 	rest.UserEndpoint(userHandler)
-	rest.MentorEndpoint(*mentorHandler)
+	rest.MentorEndpoint(mentorHandler, transactionHandler)
 
 	rest.Run()
 }

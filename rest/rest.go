@@ -9,7 +9,7 @@ import (
 )
 
 type Rest struct {
-	router          *gin.Engine
+	router *gin.Engine
 }
 
 func NewRest(c *gin.Engine) *Rest {
@@ -34,11 +34,13 @@ func (r *Rest) MerchantEndpoint(merchantHandler *handler.MerchantHandler) {
 	merchant.PUT("/verify", middleware.Authentication, merchantHandler.VerifyOtp)
 }
 
-func (r *Rest) MentorEndpoint(mentorHandler handler.MentorHandler) {
+func (r *Rest) MentorEndpoint(mentorHandler *handler.MentorHandler, transactionHandler *handler.TransactionHandler) {
 	routerGroup := r.router.Group("api/v1")
 
 	mentor := routerGroup.Group("/mentor")
 	mentor.POST("/", middleware.Authentication, mentorHandler.CreateMentor)
+	mentor.POST("/:mentorId/transaction", middleware.Authentication, transactionHandler.CreateTransaction)
+
 }
 
 func (r *Rest) Run() {

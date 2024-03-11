@@ -3,13 +3,14 @@ package domain
 import "time"
 
 type Mentors struct {
-	Id            int       `json:"-"`
-	Name          string    `json:"-"`
-	CurrentJob    string    `json:"-"`
-	Description   string    `json:"-"`
-	MentorPicture string    `json:"-"`
-	CreatedAt     time.Time `json:"-"`
-	UpdatedAt     time.Time `json:"-"`
+	Id            int            `json:"-"`
+	Name          string         `json:"-" gorm:"unique"`
+	CurrentJob    string         `json:"-"`
+	Description   string         `json:"-"`
+	MentorPicture string         `json:"-"`
+	CreatedAt     time.Time      `json:"-"`
+	UpdatedAt     time.Time      `json:"-"`
+	Transactions  []Transactions `json:"-" gorm:"foreignKey:mentor_id;references:id"`
 }
 
 type MentorRequest struct {
