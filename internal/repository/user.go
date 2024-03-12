@@ -9,6 +9,7 @@ import (
 type IUserRepository interface {
 	GetUser(user *domain.Users, param domain.UserParam) error
 	Register(newUser *domain.Users) error
+	UpdateUser(userUpdate *domain.Users) error
 }
 
 type UserRepository struct {
@@ -32,6 +33,19 @@ func (r *UserRepository) Register(newUser *domain.Users) error {
 	tx := r.db.Begin()
 
 	err := r.db.Create(newUser).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
+func (r *UserRepository) UpdateUser(userUpdate *domain.Users) error {
+	tx := r.db.Begin()
+
+	err := r.db.Where("id = ?", userUpdate.Id).Updates(userUpdate).Error
 	if err != nil {
 		tx.Rollback()
 		return err

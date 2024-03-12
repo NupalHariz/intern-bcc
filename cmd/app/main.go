@@ -11,6 +11,7 @@ import (
 	"intern-bcc/pkg/jwt"
 	"intern-bcc/pkg/middleware"
 	"intern-bcc/pkg/midtrans"
+	"intern-bcc/pkg/supabase"
 	"intern-bcc/rest"
 
 	"github.com/gin-gonic/gin"
@@ -33,10 +34,11 @@ func main() {
 	jwt := jwt.JwtInit()
 	goMail := gomail.GoMailInit()
 	midTrans := midtrans.MidTransInit()
+	supabase := supabase.SupabaseInit()
 
 	//Usecase
 	merchantUsecase := usecase.NewMerchantUsecase(merchantRepository, merchantRedis, jwt, goMail)
-	userUsecase := usecase.NewUserUsecase(userRepository, jwt)
+	userUsecase := usecase.NewUserUsecase(userRepository, jwt, supabase)
 	mentorUsecase := usecase.NewMentorUsecase(mentorRepository, jwt)
 	transactionUsecase := usecase.NewTransactionRepository(transactionRepository, jwt, midTrans)
 

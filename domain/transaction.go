@@ -11,10 +11,10 @@ type Transactions struct {
 	UserId      uuid.UUID `json:"-"`
 	MentorId    int       `json:"-"`
 	Price       uint64    `json:"-"`
-	IsPayed     bool    `json:"-"`
+	IsPayed     bool      `json:"-"`	
 	PaymentType string    `json:"-"`
 	CreatedAt   time.Time `json:"-"`
-	PayedAt     time.Time `json:"-" gorm:"autoCreateTime;autoUpdateTime"`
+	PayedAt     time.Time `json:"-"`
 	Mentor      Mentors   `json:"-"`
 	User        Users     `json:"-"`
 }

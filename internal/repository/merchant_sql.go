@@ -46,16 +46,7 @@ func (r *MerchantRepository) CreateMerchant(newMerchant *domain.Merchants) error
 func (r *MerchantRepository) UpdateMerchant(updateMerchant *domain.Merchants) error {
 	tx := r.db.Begin()
 
-	err := r.db.Debug().Model(domain.Merchants{}).Where("id = ?", updateMerchant.Id).Updates(map[string]interface{}{
-		"StoreName":   updateMerchant.StoreName,
-		"University":  updateMerchant.University,
-		"Faculty":     updateMerchant.Faculty,
-		"Province":    updateMerchant.Province,
-		"City":        updateMerchant.City,
-		"PhoneNumber": updateMerchant.PhoneNumber,
-		"Instagram":   updateMerchant.Instagram,
-		"IsActive" : updateMerchant.IsActive,
-	}).Error
+	err := r.db.Where("id = ?", updateMerchant.Id).Updates(updateMerchant).Error
 	if err != nil {
 		fmt.Println(err)
 		tx.Rollback()

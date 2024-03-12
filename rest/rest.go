@@ -33,8 +33,14 @@ func NewRest(c *gin.Engine, userHandler *handler.UserHandler,
 func (r *Rest) UserEndpoint() {
 	routerGroup := r.router.Group("api/v1")
 
+	user := routerGroup.Group("/user")
+
 	routerGroup.POST("/register", r.userHandler.Register)
 	routerGroup.POST("/login", r.userHandler.Login)
+
+	user.PATCH("/:userId", r.middleware.Authentication, r.userHandler.UpdateUser)
+	user.PATCH("/:userId/upload-photo", r.middleware.Authentication, r.userHandler.UploadPhoto)
+
 }
 
 func (r *Rest) MerchantEndpoint() {

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"mime/multipart"
 	"time"
 
 	"github.com/google/uuid"
@@ -8,11 +9,14 @@ import (
 
 type Users struct {
 	Id             uuid.UUID      `json:"-" gorm:"type:varchar(36);primary key"`
-	Username       string         `json:"username"`
+	Name           string         `json:"name"`
 	Email          string         `json:"email" gorm:"unique"`
-	Password       string         `json:"password"`
+	Password       string         `json:"-"`
+	Gender         string         `json:"gender" gorm:"type:enum('Laki-laki', 'Perempuan')"`
+	PlaceBirth     string         `json:"place_birth"`
+	DateBirth      string         `json:"date_birth"`
 	IsAdmin        bool           `json:"-"`
-	ProfilePicture string         `json:"-"`
+	ProfilePicture string         `json:"profile_picture"`
 	CreatedAt      time.Time      `json:"-"`
 	UpdatedAt      time.Time      `json:"-"`
 	Merchant       Merchants      `json:"-"  gorm:"foreignKey:user_id;references:id"`
@@ -20,7 +24,7 @@ type Users struct {
 }
 
 type UserRequest struct {
-	Username string `json:"username" binding:"required"`
+	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 	IsAdmin  bool   `json:"is_admin"`
@@ -41,4 +45,13 @@ type LoginResponse struct {
 	JWT string `json:"jwt"`
 }
 
-//	ProfilePicture
+type UserUpdate struct {
+	Name       string `json:"name"`
+	Gender     string `json:"gender"`
+	PlaceBirth string `json:"place_birth"`
+	DateBirth  string `json:"date_birth"`
+}
+
+type UploadUserPhoto struct {
+	ProfilePicture *multipart.FileHeader `json:"profile_picture"`
+}
