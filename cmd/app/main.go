@@ -51,6 +51,7 @@ func main() {
 	rest.UserEndpoint()
 	rest.MentorEndpoint()
 	rest.ProductEndpoint()
+	rest.InformationEndpoint()
 
 	rest.Run()
 }
@@ -59,3 +60,4 @@ func main() {
 //Jangan lupa bikin text untuk OTP(text yang sekarang masih nyoba-nyoba)
 //ENV nya samain buat yang kayak di deploy
 //Jangan lupa benerin respon untuk update
+//Kasus gimana kalo ada orang yang file fotonya sama

@@ -4,11 +4,11 @@ import "time"
 
 type Information struct {
 	Id               int       `json:"-"`
-	Title            string    `json:"-"`
+	Title            string    `json:"title"`
 	CategoryId       int       `json:"-"`
-	Synopsis         string    `json:"-"`
-	Content          string    `json:"-"`
-	InformationPhoto string    `json:"-"`
+	Synopsis         string    `json:"synopsis"`
+	Content          string    `json:"content"`
+	InformationPhoto string    `json:"information_photo"`
 	CreatedAt        time.Time `json:"-"`
 	UpdatedAt        time.Time `json:"-"`
 }
@@ -18,4 +18,9 @@ type InformationRequest struct {
 	Category string `json:"category" binding:"required"`
 	Synopsis string `json:"synopsis"`
 	Content  string `json:"content"`
+}
+
+type InformationUpdate struct {
+	Sysnopsis string `json:"synopsis"`
+	Content   string `json:"content"`
 }

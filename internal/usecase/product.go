@@ -201,7 +201,7 @@ func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId int, produ
 		if err != nil {
 			return domain.Products{}, response.ErrorObject{
 				Code:    http.StatusInternalServerError,
-				Message: "error occured when deleting old profile picture",
+				Message: "error occured when deleting old product photo",
 				Err:     err,
 			}
 		}

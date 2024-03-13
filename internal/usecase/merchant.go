@@ -276,7 +276,7 @@ func (u *MerchantUsecase) UploadMerchantPhoto(c *gin.Context, merchantId int, me
 		if err != nil {
 			return domain.Merchants{}, response.ErrorObject{
 				Code:    http.StatusInternalServerError,
-				Message: "error occured when deleting old profile picture",
+				Message: "error occured when deleting old merchant photo",
 				Err:     err,
 			}
 		}

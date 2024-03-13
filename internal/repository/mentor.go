@@ -7,7 +7,9 @@ import (
 )
 
 type IMentorRepository interface{
+	GetMentor(mentor *domain.Mentors, mentorParam domain.Mentors) error 
 	CreateMentor(newMentor *domain.Mentors) error
+	UpdateMentor (mentor *domain.Mentors) error
 }
 
 type MentorRepository struct {
@@ -16,6 +18,15 @@ type MentorRepository struct {
 
 func NewMentorRepository(db *gorm.DB) IMentorRepository {
 	return &MentorRepository{db}
+}
+
+func(r *MentorRepository) GetMentor(mentor *domain.Mentors, mentorParam domain.Mentors) error {
+	err := r.db.First(mentor, mentorParam).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *MentorRepository) CreateMentor(newMentor *domain.Mentors) error {
@@ -28,5 +39,17 @@ func (r *MentorRepository) CreateMentor(newMentor *domain.Mentors) error {
 	}
 
 	tx.Commit()
+	return nil
+}
+
+func (r *MentorRepository) UpdateMentor (mentor *domain.Mentors) error {
+	tx := r.db.Begin()
+
+	err := r.db.Where("id = ?", mentor.Id).Updates(mentor).Error
+	if err != nil{
+		tx.Rollback()
+		return err
+	}
+
 	return nil
 }

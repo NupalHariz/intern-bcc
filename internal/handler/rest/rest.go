@@ -51,6 +51,8 @@ func (r *Rest) MentorEndpoint() {
 
 	mentor := routerGroup.Group("/mentor")
 	mentor.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateMentor)
+	mentor.PATCH("/:mentorId", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UpdateMentor)
+	mentor.PATCH("/:mentorId/upload-photo", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UploadMentorPicture)
 	mentor.POST("/:mentorId/transaction", r.middleware.Authentication, r.CreateTransaction)
 	mentor.POST("/:mentorId/experience", r.middleware.Authentication, r.middleware.OnlyAdmin, r.AddExperience)
 	mentor.POST("/payment-callback", r.VerifyTransaction)
@@ -63,6 +65,15 @@ func (r *Rest) ProductEndpoint() {
 	product.POST("/", r.middleware.Authentication, r.CreateProduct)
 	product.PATCH("/:productId", r.middleware.Authentication, r.UpdateProduct)
 	product.PATCH("/:productId/product-photo", r.middleware.Authentication, r.UploadProductPhoto)
+}
+
+func (r *Rest) InformationEndpoint() {
+	routerGroup := r.router.Group("api/v1")
+
+	information := routerGroup.Group("/information")
+	information.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateInformation)
+	information.PATCH("/:informationId", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UpdateInformation)
+	information.PATCH("/:informationId/upload-photo", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UploadInformationPhoto)
 }
 
 func (r *Rest) Run() {
