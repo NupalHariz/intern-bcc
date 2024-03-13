@@ -26,7 +26,7 @@ func NewInformatinUsecase(informationRepository repository.IInformationRepositor
 func (u *InformationUsecase) CreateInformation(informationRequest domain.InformationRequest) any {
 	var category domain.Categories
 
-	err := u.categoryRepository.GetCategory(&category)
+	err := u.categoryRepository.GetCategory(&category, domain.Categories{Category: informationRequest.Category})
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,

@@ -61,6 +61,8 @@ func (r *Rest) ProductEndpoint() {
 
 	product := routerGroup.Group("/product")
 	product.POST("/", r.middleware.Authentication, r.CreateProduct)
+	product.PATCH("/:productId", r.middleware.Authentication, r.UpdateProduct)
+	product.PATCH("/:productId/product-photo", r.middleware.Authentication, r.UploadProductPhoto)
 }
 
 func (r *Rest) Run() {

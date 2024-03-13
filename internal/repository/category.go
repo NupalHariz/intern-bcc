@@ -7,7 +7,7 @@ import (
 )
 
 type ICategoryRepository interface{
-	GetCategory(category *domain.Categories) error
+	GetCategory(category *domain.Categories, categoryParam domain.Categories) error
 	CreateCategory(category *domain.Categories) error
 }
 
@@ -19,8 +19,8 @@ func NewCategoryRepository(db *gorm.DB) ICategoryRepository {
 	return &CategoryRepository{db}
 }
 
-func (r *CategoryRepository) GetCategory(category *domain.Categories) error {
-	err := r.db.First(category, category).Error
+func (r *CategoryRepository) GetCategory(category *domain.Categories, categoryParam domain.Categories) error {
+	err := r.db.Debug().First(category, categoryParam).Error
 	if err != nil {
 		return err
 	}
