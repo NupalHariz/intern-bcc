@@ -58,3 +58,4 @@ func main() {
 //CATATAN
 //Jangan lupa bikin text untuk OTP(text yang sekarang masih nyoba-nyoba)
 //ENV nya samain buat yang kayak di deploy
+//Jangan lupa benerin respon untuk update

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (r *Rest) Register(c *gin.Context) {
@@ -47,15 +48,20 @@ func (r *Rest) Login(c *gin.Context) {
 }
 
 func (r *Rest) UpdateUser(c *gin.Context) {
+	userIdString := c.Param("userId")
+	userId, err := uuid.Parse(userIdString)
+	if err != nil {
+		response.Failed(c, http.StatusBadRequest, "failed to parsing user id", err)
+	}
 	var userUpdate domain.UserUpdate
 
-	err := c.ShouldBindJSON(&userUpdate)
+	err = c.ShouldBindJSON(&userUpdate)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
 		return
 	}
 
-	updatedUser, errorObject := r.usecase.UserUsecase.UpdateUser(c, userUpdate)
+	updatedUser, errorObject := r.usecase.UserUsecase.UpdateUser(c, userId, userUpdate)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
@@ -65,17 +71,20 @@ func (r *Rest) UpdateUser(c *gin.Context) {
 	response.Success(c, "success update user", updatedUser)
 }
 
-func (r *Rest) UploadPhoto(c *gin.Context) {
+func (r *Rest) UploadUserPhoto(c *gin.Context) {
+	userIdString := c.Param("userId")
+	userId, err := uuid.Parse(userIdString)
+	if err != nil {
+		response.Failed(c, http.StatusBadRequest, "failed to parsing user id", err)
+	}
+
 	profilePicture, err := c.FormFile("profile_picture")
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
 		return
 	}
 
-	var userPhoto domain.UploadUserPhoto
-	userPhoto.ProfilePicture = profilePicture
-
-	errorObject := r.usecase.UserUsecase.UploadPhoto(c, profilePicture)
+	errorObject := r.usecase.UserUsecase.UploadUserPhoto(c, userId, profilePicture)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)

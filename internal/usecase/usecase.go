@@ -32,7 +32,7 @@ func NewUsecase(usecaseParam UsecaseParam) *Usecase {
 	transactionUsecase := NewTransactionUsecase(usecaseParam.Repository.TransactionRepository, usecaseParam.Jwt, usecaseParam.Midtrans)
 	productUsecase := NewProductUsecase(usecaseParam.Repository.ProductRepository, usecaseParam.Jwt, usecaseParam.Repository.MerchantSQLRepository, usecaseParam.Repository.CategoryRepository)
 	mentorUsecase := NewMentorUsecase(usecaseParam.Repository.MentorRepository, usecaseParam.Jwt)
-	merchantUsecase := NewMerchantUsecase(usecaseParam.Repository.MerchantSQLRepository, usecaseParam.Repository.MerchantRedisRepository, usecaseParam.Jwt, usecaseParam.GoMail)
+	merchantUsecase := NewMerchantUsecase(usecaseParam.Repository.MerchantSQLRepository, usecaseParam.Repository.MerchantRedisRepository, usecaseParam.Jwt, usecaseParam.GoMail, usecaseParam.Supabase)
 	experienceUsecase := NewExperienceRepository(usecaseParam.Repository.ExperienceRepository)
 	categoryUsecase := NewCategoryUsecase(usecaseParam.Repository.CategoryRepository)
 	informationUsecase := NewInformatinUsecase(usecaseParam.Repository.InformationRepository, usecaseParam.Repository.CategoryRepository)

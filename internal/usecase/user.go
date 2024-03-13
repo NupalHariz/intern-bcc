@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"fmt"
+	"errors"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/jwt"
@@ -19,8 +19,8 @@ type IUserUsecase interface {
 	GetUser(param domain.UserParam) (domain.Users, any)
 	Register(userRequest domain.UserRequest) any
 	Login(userLogin domain.UserLogin) (domain.LoginResponse, any)
-	UpdateUser(c *gin.Context, userUpdate domain.UserUpdate) (domain.Users, any)
-	UploadPhoto(c *gin.Context, userPhoto *multipart.FileHeader) any
+	UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.Users, any)
+	UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) any
 }
 
 type UserUsecase struct {
@@ -65,7 +65,6 @@ func (u *UserUsecase) Register(userRequest domain.UserRequest) any {
 		Id:       uuid.New(),
 		Name:     userRequest.Name,
 		Email:    userRequest.Email,
-		IsAdmin:  userRequest.IsAdmin,
 		Password: string(hashPassword),
 	}
 
@@ -119,13 +118,21 @@ func (u *UserUsecase) Login(userLogin domain.UserLogin) (domain.LoginResponse, a
 	return loginUser, nil
 }
 
-func (u *UserUsecase) UpdateUser(c *gin.Context, userUpdate domain.UserUpdate) (domain.Users, any) {
+func (u *UserUsecase) UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.Users, any) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
 		return domain.Users{}, response.ErrorObject{
 			Code:    http.StatusNotFound,
 			Message: "failed to get user id",
 			Err:     err,
+		}
+	}
+
+	if userId != user.Id {
+		return domain.Users{}, response.ErrorObject{
+			Code:    http.StatusUnauthorized,
+			Message: "access denied",
+			Err:     errors.New("can not change other people profile"),
 		}
 	}
 
@@ -143,11 +150,9 @@ func (u *UserUsecase) UpdateUser(c *gin.Context, userUpdate domain.UserUpdate) (
 	return user, nil
 }
 
-func (u *UserUsecase) UploadPhoto(c *gin.Context, userPhoto *multipart.FileHeader) any {
+func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) any {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		fmt.Println("148", err)
-
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,
 			Message: "failed to get user id",
@@ -155,10 +160,17 @@ func (u *UserUsecase) UploadPhoto(c *gin.Context, userPhoto *multipart.FileHeade
 		}
 	}
 
+	if user.Id != userId {
+		return response.ErrorObject{
+			Code:    http.StatusUnauthorized,
+			Message: "access denied",
+			Err:     errors.New("can not change other people profile"),
+		}
+	}
+
 	if user.ProfilePicture != "" {
 		err = u.supabase.Delete(user.ProfilePicture)
 		if err != nil {
-
 			return response.ErrorObject{
 				Code:    http.StatusInternalServerError,
 				Message: "error occured when deleting old profile picture",
@@ -171,7 +183,7 @@ func (u *UserUsecase) UploadPhoto(c *gin.Context, userPhoto *multipart.FileHeade
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusInternalServerError,
-			Message: "failed to uplaod photo",
+			Message: "failed to upload photo",
 			Err:     err,
 		}
 	}

@@ -27,7 +27,6 @@ type UserRequest struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
-	IsAdmin  bool   `json:"is_admin"`
 }
 
 type UserLogin struct {
@@ -38,7 +37,6 @@ type UserLogin struct {
 type UserParam struct {
 	Id       uuid.UUID `json:"-"`
 	Email    string    `json:"-"`
-	Password string    `json:"-"`
 }
 
 type LoginResponse struct {

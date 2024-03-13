@@ -8,7 +8,9 @@ import (
 	"intern-bcc/pkg/gomail"
 	"intern-bcc/pkg/jwt"
 	"intern-bcc/pkg/response"
+	"intern-bcc/pkg/supabase"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,22 +22,26 @@ type IMerchantUsecase interface {
 	CreateMerchant(c *gin.Context, merchantRequest domain.MerchantRequest) any
 	SendOtp(c *gin.Context, ctx context.Context) any
 	VerifyOtp(c *gin.Context, ctx context.Context, verifyOtp domain.MerchantVerify) any
+	UpdateMerchant(c *gin.Context, merchantId int, updateMerchant domain.UpdateMerchant) any
+	UploadMerchantPhoto(c *gin.Context, merchantId int, merchantPhoto *multipart.FileHeader) (domain.Merchants, any)
 }
 
 type MerchantUsecase struct {
 	merchantRedis      repository.IMerchantRedis
 	merchantRepository repository.IMerchantRepository
-	jwt jwt.IJwt
-	goMail gomail.IGoMail
+	jwt                jwt.IJwt
+	goMail             gomail.IGoMail
+	supabase           supabase.ISupabase
 }
 
 func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, merchantRedis repository.IMerchantRedis,
-	jwt jwt.IJwt, goMail gomail.IGoMail) IMerchantUsecase {
+	jwt jwt.IJwt, goMail gomail.IGoMail, supabase supabase.ISupabase) IMerchantUsecase {
 	return &MerchantUsecase{
 		merchantRedis:      merchantRedis,
 		merchantRepository: merchantRepository,
-		jwt: jwt,
-		goMail: goMail,
+		jwt:                jwt,
+		goMail:             goMail,
+		supabase:           supabase,
 	}
 }
 
@@ -49,22 +55,22 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 		}
 	}
 
-	if merchantRequest.StoreName == "" {
-		merchantRequest.StoreName = strings.Split(user.Email, "@")[0] + " Store's"
+	if merchantRequest.MerchantName == "" {
+		merchantRequest.MerchantName = strings.Split(user.Email, "@")[0] + " Store's"
 	}
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err == nil {
 		merchant := domain.Merchants{
-			Id:          merchant.Id,
-			StoreName:   merchantRequest.StoreName,
-			University:  merchantRequest.University,
-			Faculty:     merchantRequest.Faculty,
-			Province:    merchantRequest.Province,
-			City:        merchantRequest.City,
-			PhoneNumber: merchantRequest.PhoneNumber,
-			Instagram:   merchantRequest.Instagram,
+			Id:           merchant.Id,
+			MerchantName: merchantRequest.MerchantName,
+			University:   merchantRequest.University,
+			Faculty:      merchantRequest.Faculty,
+			Province:     merchantRequest.Province,
+			City:         merchantRequest.City,
+			PhoneNumber:  merchantRequest.PhoneNumber,
+			Instagram:    merchantRequest.Instagram,
 		}
 
 		err = u.merchantRepository.UpdateMerchant(&merchant)
@@ -80,14 +86,14 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 	}
 
 	newMerchant := domain.Merchants{
-		UserId:      user.Id,
-		StoreName:   merchantRequest.StoreName,
-		University:  merchantRequest.University,
-		Faculty:     merchantRequest.Faculty,
-		Province:    merchantRequest.Province,
-		City:        merchantRequest.City,
-		PhoneNumber: merchantRequest.PhoneNumber,
-		Instagram:   merchantRequest.Instagram,
+		UserId:       user.Id,
+		MerchantName: merchantRequest.MerchantName,
+		University:   merchantRequest.University,
+		Faculty:      merchantRequest.Faculty,
+		Province:     merchantRequest.Province,
+		City:         merchantRequest.City,
+		PhoneNumber:  merchantRequest.PhoneNumber,
+		Instagram:    merchantRequest.Instagram,
 	}
 
 	err = u.merchantRepository.CreateMerchant(&newMerchant)
@@ -107,7 +113,7 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusNotFound,
-			Message: "failed to get user id",
+			Message: "failed to get user",
 			Err:     err,
 		}
 	}
@@ -185,4 +191,115 @@ func (u *MerchantUsecase) VerifyOtp(c *gin.Context, ctx context.Context, verifyO
 	}
 
 	return nil
+}
+
+func (u *MerchantUsecase) UpdateMerchant(c *gin.Context, merchantId int, updateMerchant domain.UpdateMerchant) any {
+	user, err := u.jwt.GetLoginUser(c)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "failed to get user",
+			Err:     err,
+		}
+	}
+
+	var merchant domain.Merchants
+	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{Id: merchantId})
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusFound,
+			Message: "failed to get merchant",
+			Err:     err,
+		}
+	}
+
+	if user.Id != merchant.UserId {
+		return response.ErrorObject{
+			Code:    http.StatusUnauthorized,
+			Message: "access denied",
+			Err:     errors.New("can not edit other people merchant"),
+		}
+	}
+
+	if updateMerchant.MerchantName != "" {
+		merchant.MerchantName = updateMerchant.MerchantName
+	}
+	if updateMerchant.Instagram != "" {
+		merchant.Instagram = updateMerchant.Instagram
+	}
+	if updateMerchant.PhoneNumber != "" {
+		merchant.PhoneNumber = updateMerchant.PhoneNumber
+	}
+
+	err = u.merchantRepository.UpdateMerchant(&merchant)
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "an error occured when update merchant",
+			Err:     err,
+		}
+	}
+
+	return nil
+}
+
+func (u *MerchantUsecase) UploadMerchantPhoto(c *gin.Context, merchantId int, merchantPhoto *multipart.FileHeader) (domain.Merchants, any) {
+	user, err := u.jwt.GetLoginUser(c)
+	if err != nil {
+		return domain.Merchants{}, response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "failed to get user",
+			Err:     err,
+		}
+	}
+
+	var merchant domain.Merchants
+	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{Id: merchantId})
+	if err != nil {
+		return domain.Merchants{}, response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "failed to get merchant",
+			Err:     err,
+		}
+	}
+
+	if user.Id != merchant.UserId {
+		return domain.Merchants{}, response.ErrorObject{
+			Code:    http.StatusUnauthorized,
+			Message: "access denied",
+			Err:     errors.New("can not edit other people merchant"),
+		}
+	}
+
+	if merchant.MerchantPhoto != "" {
+		err = u.supabase.Delete(merchant.MerchantPhoto)
+		if err != nil {
+			return domain.Merchants{}, response.ErrorObject{
+				Code:    http.StatusInternalServerError,
+				Message: "error occured when deleting old profile picture",
+				Err:     err,
+			}
+		}
+	}
+
+	newMerchantPhoto, err := u.supabase.Upload(merchantPhoto)
+	if err != nil {
+		return domain.Merchants{}, response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "failed to upload photo",
+			Err:     err,
+		}
+	}
+
+	merchant.MerchantPhoto = newMerchantPhoto
+	err = u.merchantRepository.UpdateMerchant(&merchant)
+	if err != nil {
+		return domain.Merchants{}, response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "an error occured when update merchant photo",
+			Err:     err,
+		}
+	}
+
+	return merchant, nil
 }

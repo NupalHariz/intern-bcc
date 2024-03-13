@@ -31,7 +31,7 @@ func (r *Rest) UserEndpoint() {
 	routerGroup.POST("/login", r.Login)
 
 	user.PATCH("/:userId", r.middleware.Authentication, r.UpdateUser)
-	user.PATCH("/:userId/upload-photo", r.middleware.Authentication, r.UploadPhoto)
+	user.PATCH("/:userId/upload-photo", r.middleware.Authentication, r.UploadUserPhoto)
 
 }
 
@@ -42,6 +42,8 @@ func (r *Rest) MerchantEndpoint() {
 	merchant.POST("/", r.middleware.Authentication, r.CreateMerchant)
 	merchant.GET("/verify", r.middleware.Authentication, r.SendOtp)
 	merchant.PUT("/verify", r.middleware.Authentication, r.VerifyOtp)
+	merchant.PATCH("/:merchantId", r.middleware.Authentication, r.UpdateMerchant)
+	merchant.PATCH("/:merchantId/upload-photo", r.middleware.Authentication, r.UploadMerchantPhoto)
 }
 
 func (r *Rest) MentorEndpoint() {

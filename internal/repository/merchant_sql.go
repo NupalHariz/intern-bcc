@@ -46,7 +46,7 @@ func (r *MerchantRepository) CreateMerchant(newMerchant *domain.Merchants) error
 func (r *MerchantRepository) UpdateMerchant(updateMerchant *domain.Merchants) error {
 	tx := r.db.Begin()
 
-	err := r.db.Where("id = ?", updateMerchant.Id).Updates(updateMerchant).Error
+	err := r.db.Debug().Where("id = ?", updateMerchant.Id).Updates(updateMerchant).Error
 	if err != nil {
 		fmt.Println(err)
 		tx.Rollback()
