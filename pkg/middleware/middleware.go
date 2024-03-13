@@ -13,13 +13,13 @@ type IMiddleware interface {
 }
 
 type Middleware struct {
-	jwtAuth     jwt.IJwt
-	userUsecase usecase.IUserUsecase
+	jwtAuth jwt.IJwt
+	usecase *usecase.Usecase
 }
 
-func MiddlerwareInit(jwtAuth jwt.IJwt, userUsecase usecase.IUserUsecase) IMiddleware {
+func MiddlerwareInit(jwtAuth jwt.IJwt, usecase *usecase.Usecase) IMiddleware {
 	return &Middleware{
 		jwtAuth:     jwtAuth,
-		userUsecase: userUsecase,
+		usecase: usecase,
 	}
 }

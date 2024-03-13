@@ -32,7 +32,7 @@ func (r *TransactionsRepository) GetTransaction(transaction *domain.Transactions
 func (r *TransactionsRepository) CreateTransaction(newTransaction *domain.Transactions) error {
 	tx := r.db.Begin()
 
-	err := r.db.Create(newTransaction).Error
+	err := r.db.Debug().Create(newTransaction).Error
 	if err != nil{
 		tx.Rollback()
 		return err

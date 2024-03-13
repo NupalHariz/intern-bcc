@@ -6,6 +6,7 @@ require gorm.io/driver/mysql v1.5.4
 
 require (
 	github.com/adityarizkyramadhan/supabase-storage-uploader v1.0.0 // indirect
+	github.com/bxcodec/faker/v4 v4.0.0-beta.3 // indirect
 	github.com/bytedance/sonic v1.11.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect

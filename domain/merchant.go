@@ -7,19 +7,20 @@ import (
 )
 
 type Merchants struct {
-	Id          int       `json:"id"`
-	UserId      uuid.UUID `json:"user_id" gorm:"type:varchar(36);unique"`
-	StoreName   string    `json:"store_name"`
-	University  string    `json:"university"`
-	Faculty     string    `json:"faculty"`
-	Province    string    `json:"province"`
-	City        string    `json:"city"`
-	PhoneNumber string    `json:"phone_number"`
-	Instagram   string    `json:"instagram"`
-	StorePhoto  string    `json:"-"`
-	IsActive    bool      `json:"-"`
-	CreatedAt   time.Time `json:"-"`
-	UpdatedAt   time.Time `json:"-"`
+	Id          int        `json:"id"`
+	UserId      uuid.UUID  `json:"user_id" gorm:"type:varchar(36);unique"`
+	StoreName   string     `json:"store_name"`
+	University  string     `json:"university"`
+	Faculty     string     `json:"faculty"`
+	Province    string     `json:"province"`
+	City        string     `json:"city"`
+	PhoneNumber string     `json:"phone_number"`
+	Instagram   string     `json:"instagram"`
+	StorePhoto  string     `json:"-"`
+	IsActive    bool       `json:"-"`
+	CreatedAt   time.Time  `json:"-"`
+	UpdatedAt   time.Time  `json:"-"`
+	Products    []Products `json:"-" gorm:"foreignKey:merchant_id;references:id"`
 }
 
 type MerchantRequest struct {

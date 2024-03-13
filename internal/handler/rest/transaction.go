@@ -1,8 +1,7 @@
-package handler
+package rest
 
 import (
 	"intern-bcc/domain"
-	"intern-bcc/internal/usecase"
 	"intern-bcc/pkg/response"
 	"net/http"
 	"strconv"
@@ -10,15 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type TransactionHandler struct {
-	transactionUsecase usecase.ITransactionUsecase
-}
-
-func NewTransactionHandler(transactionUsecase usecase.ITransactionUsecase) *TransactionHandler {
-	return &TransactionHandler{transactionUsecase}
-}
-
-func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
+func (r *Rest) CreateTransaction(c *gin.Context) {
 	mentorIdString := c.Param("mentorId")
 	mentorId, _ := strconv.Atoi(mentorIdString)
 
@@ -29,7 +20,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
 	}
 
-	coreApiRes, errorObject := h.transactionUsecase.CreateTransaction(c, mentorId, transactionRequest)
+	coreApiRes, errorObject := r.usecase.TransactionUsecase.CreateTransaction(c, mentorId, transactionRequest)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
@@ -39,7 +30,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 	response.Success(c, "waiting for payment", coreApiRes)
 }
 
-func (h *TransactionHandler) VerifyTransaction(c *gin.Context) {
+func (r *Rest) VerifyTransaction(c *gin.Context) {
 	var payLoad map[string]interface{}
 
 	err := c.ShouldBindJSON(&payLoad)
@@ -47,7 +38,7 @@ func (h *TransactionHandler) VerifyTransaction(c *gin.Context) {
 		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
 	}
 
-	errorObject := h.transactionUsecase.VerifyTransaction(payLoad)
+	errorObject := r.usecase.TransactionUsecase.VerifyTransaction(payLoad)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)

@@ -11,6 +11,7 @@ type Mentors struct {
 	CreatedAt     time.Time      `json:"-"`
 	UpdatedAt     time.Time      `json:"-"`
 	Transactions  []Transactions `json:"-" gorm:"foreignKey:mentor_id;references:id"`
+	Experiences   []Experiences  `json:"-" gorm:"foreignKey:mentor_id;references:id"`
 }
 
 type MentorRequest struct {

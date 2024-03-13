@@ -26,7 +26,7 @@ type TransactionUsecase struct {
 	midTrans              midtrans.IMidTrans
 }
 
-func NewTransactionRepository(transactionRepository repository.ITransactionRepository, jwt jwt.IJwt, midTrans midtrans.IMidTrans) ITransactionUsecase {
+func NewTransactionUsecase(transactionRepository repository.ITransactionRepository, jwt jwt.IJwt, midTrans midtrans.IMidTrans) ITransactionUsecase {
 	return &TransactionUsecase{
 		transactionRepository: transactionRepository,
 		jwt:                   jwt,
@@ -44,12 +44,22 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, tra
 		}
 	}
 
+	layoutFormat := "2006-01-02 15:04:05"
+	nullTime, err := time.Parse(layoutFormat, "1970-01-01 00:00:01")
+	if err != nil {
+		return nil, response.ErrorObject{
+			Code:    http.StatusInternalServerError,
+			Message: "failed parsing null time",
+			Err:     err,
+		}
+	}
 	newTransaction := domain.Transactions{
 		Id:          uuid.New(),
 		UserId:      user.Id,
 		MentorId:    mentorId,
 		Price:       transactionRequest.Price,
 		PaymentType: transactionRequest.PaymentType,
+		PayedAt: nullTime,
 	}
 
 	coreApiRes, err := u.midTrans.ChargeTransaction(newTransaction)
@@ -127,9 +137,9 @@ func (u *TransactionUsecase) VerifyTransaction(payload map[string]interface{}) a
 	err = u.transactionRepository.UpdateTransaction(&transaction)
 	if err != nil {
 		return response.ErrorObject{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: "an error occured when update transaction",
-			Err: err,
+			Err:     err,
 		}
 	}
 

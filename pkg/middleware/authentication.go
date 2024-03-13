@@ -26,7 +26,7 @@ func (m *Middleware) Authentication(c *gin.Context) {
 		return
 	}
 
-	user, errorObject := m.userUsecase.GetUser(domain.UserParam{Id: userId})
+	user, errorObject := m.usecase.UserUsecase.GetUser(domain.UserParam{Id: userId})
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)

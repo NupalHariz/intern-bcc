@@ -14,7 +14,7 @@ type Transactions struct {
 	IsPayed     bool      `json:"-"`	
 	PaymentType string    `json:"-"`
 	CreatedAt   time.Time `json:"-"`
-	PayedAt     time.Time `json:"-"`
+	PayedAt     time.Time `json:"-" gorm:"type:datetime NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP"`
 	Mentor      Mentors   `json:"-"`
 	User        Users     `json:"-"`
 }

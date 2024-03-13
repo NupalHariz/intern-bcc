@@ -12,7 +12,7 @@ type Users struct {
 	Name           string         `json:"name"`
 	Email          string         `json:"email" gorm:"unique"`
 	Password       string         `json:"-"`
-	Gender         string         `json:"gender" gorm:"type:enum('Laki-laki', 'Perempuan')"`
+	Gender         string         `json:"gender" gorm:"type:enum('Laki-laki', 'Perempuan', '')"`
 	PlaceBirth     string         `json:"place_birth"`
 	DateBirth      string         `json:"date_birth"`
 	IsAdmin        bool           `json:"-"`

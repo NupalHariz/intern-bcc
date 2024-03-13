@@ -1,7 +1,7 @@
 package main
 
 import (
-	"intern-bcc/internal/handler"
+	"intern-bcc/internal/handler/rest"
 	"intern-bcc/internal/repository"
 	"intern-bcc/internal/usecase"
 	"intern-bcc/pkg/gomail"
@@ -12,7 +12,6 @@ import (
 	"intern-bcc/pkg/middleware"
 	"intern-bcc/pkg/midtrans"
 	"intern-bcc/pkg/supabase"
-	"intern-bcc/rest"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,13 +21,10 @@ func main() {
 	cache.ConnectToRedis()
 	database.ConnectToDB()
 	database.Migrate()
+	infrastucture.SeedData(database.DB)
 
 	//Repository
-	merchantRepository := repository.NewMerchantRepository(database.DB)
-	merchantRedis := repository.NewMerchantRedis(cache.RDB)
-	userRepository := repository.NewUserRepository(database.DB)
-	mentorRepository := repository.NewMentorRepository(database.DB)
-	transactionRepository := repository.NewTransactionRepository(database.DB)
+	repository := repository.NewRepository(database.DB, cache.RDB)
 
 	//pkg
 	jwt := jwt.JwtInit()
@@ -37,28 +33,28 @@ func main() {
 	supabase := supabase.SupabaseInit()
 
 	//Usecase
-	merchantUsecase := usecase.NewMerchantUsecase(merchantRepository, merchantRedis, jwt, goMail)
-	userUsecase := usecase.NewUserUsecase(userRepository, jwt, supabase)
-	mentorUsecase := usecase.NewMentorUsecase(mentorRepository, jwt)
-	transactionUsecase := usecase.NewTransactionRepository(transactionRepository, jwt, midTrans)
+	usecase := usecase.NewUsecase(usecase.UsecaseParam{
+		Repository: repository,
+		Jwt:        jwt,
+		Supabase:   supabase,
+		Midtrans:   midTrans,
+		GoMail:     goMail,
+	})
 
 	//Middleware
-	middleware := middleware.MiddlerwareInit(jwt, userUsecase)
+	middleware := middleware.MiddlerwareInit(jwt, usecase)
 
-	//Handler
-	merchantHandler := handler.NewMerchantHandler(merchantUsecase)
-	userHandler := handler.NewUserHandler(userUsecase)
-	mentorHandler := handler.NewMentorHandler(mentorUsecase)
-	transactionHandler := handler.NewTransactionHandler(transactionUsecase)
-
-	rest := rest.NewRest(gin.New(), userHandler, merchantHandler, mentorHandler, transactionHandler, middleware)
+	//Rest
+	rest := rest.NewRest(gin.New(), usecase, middleware)
 
 	rest.MerchantEndpoint()
 	rest.UserEndpoint()
 	rest.MentorEndpoint()
+	rest.ProductEndpoint()
 
 	rest.Run()
 }
 
 //CATATAN
 //Jangan lupa bikin text untuk OTP(text yang sekarang masih nyoba-nyoba)
+//ENV nya samain buat yang kayak di deploy

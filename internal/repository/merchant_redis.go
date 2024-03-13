@@ -31,13 +31,6 @@ func (r *Redis) SetOTP(ctx context.Context, userId uuid.UUID, otpString string) 
 
 	key := fmt.Sprintf(keySetOtp, userId)
 
-	// byteOTP, err := json.Marshal(otpString)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// fmt.Println(byteOTP)
-
 	err := r.r.SetEx(ctx, key, otpString, 2*time.Minute).Err()
 	if err != nil {
 		return err

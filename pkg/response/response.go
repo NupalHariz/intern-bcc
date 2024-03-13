@@ -15,13 +15,20 @@ type ErrorObject struct {
 func Failed(c *gin.Context, code int, message string, err error) {
 	c.JSON(code, gin.H{
 		"message": message,
-		"error":   err,
+		"error":   err.Error(),
 	})
 }
 
 func Success(c *gin.Context, message string, data interface{}) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": message,
-		"data": data,
+		"data":    data,
+	})
+}
+
+
+func SuccessWithoutData(c *gin.Context, message string) {
+	c.JSON(http.StatusOK, gin.H{
+		"message": message,
 	})
 }
