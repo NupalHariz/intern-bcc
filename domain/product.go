@@ -15,6 +15,7 @@ type Products struct {
 	ProductPhoto string    `json:"product_photo"`
 	CreatedAt    time.Time `json:"-"`
 	UpdatedAt    time.Time `json:"-"`
+	LikeByUser   []Users   `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:product_id;references:id;joinReferences:user_id"`
 }
 
 type ProductParam struct {

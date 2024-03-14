@@ -4,6 +4,7 @@ import (
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -92,4 +93,38 @@ func (r *Rest) UploadUserPhoto(c *gin.Context) {
 	}
 
 	response.Success(c, "success updload photo", nil)
+}
+
+func (r *Rest) LikeProduct(c *gin.Context) {
+	productIdString := c.Param("productId")
+	productId, err := strconv.Atoi(productIdString)
+	if err != nil {
+		response.Failed(c, http.StatusBadRequest, "failed to parsing product id", err)
+	}
+
+	errorObject := r.usecase.UserUsecase.LikeProduct(c, productId)
+	if errorObject != nil {
+		errorObject := errorObject.(response.ErrorObject)
+		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+		return
+	}
+
+	response.Success(c, "success like product", nil)
+}
+
+func (r *Rest) DeleteLikeProduct(c *gin.Context) {
+	productIdString := c.Param("productId")
+	productId, err := strconv.Atoi(productIdString)
+	if err != nil {
+		response.Failed(c, http.StatusBadRequest, "failed to parsing product id", err)
+	}
+
+	errorObject := r.usecase.UserUsecase.DeleteLikeProduct(c, productId)
+	if errorObject != nil {
+		errorObject := errorObject.(response.ErrorObject)
+		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+		return
+	}
+
+	response.Success(c, "success delete liked product", nil)
 }

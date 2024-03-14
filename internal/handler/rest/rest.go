@@ -65,6 +65,8 @@ func (r *Rest) ProductEndpoint() {
 	product.POST("/", r.middleware.Authentication, r.CreateProduct)
 	product.PATCH("/:productId", r.middleware.Authentication, r.UpdateProduct)
 	product.PATCH("/:productId/product-photo", r.middleware.Authentication, r.UploadProductPhoto)
+	product.POST("/:productId", r.middleware.Authentication, r.LikeProduct)
+	product.DELETE("/:productId", r.middleware.Authentication, r.DeleteLikeProduct)
 }
 
 func (r *Rest) InformationEndpoint() {

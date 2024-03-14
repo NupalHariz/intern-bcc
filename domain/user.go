@@ -21,6 +21,7 @@ type Users struct {
 	UpdatedAt      time.Time      `json:"-"`
 	Merchant       Merchants      `json:"-"  gorm:"foreignKey:user_id;references:id"`
 	Transactions   []Transactions `json:"-" gorm:"foreignKey:user_id;references:id"`
+	LikeProduct    []Products     `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:user_id"`
 }
 
 type UserRequest struct {
@@ -35,8 +36,8 @@ type UserLogin struct {
 }
 
 type UserParam struct {
-	Id       uuid.UUID `json:"-"`
-	Email    string    `json:"-"`
+	Id    uuid.UUID `json:"-"`
+	Email string    `json:"-"`
 }
 
 type LoginResponse struct {
@@ -52,4 +53,9 @@ type UserUpdate struct {
 
 type UploadUserPhoto struct {
 	ProfilePicture *multipart.FileHeader `json:"profile_picture"`
+}
+
+type LikeProduct struct {
+	UserId    uuid.UUID `json:"-"`
+	ProductId int       `json:"-"`
 }
