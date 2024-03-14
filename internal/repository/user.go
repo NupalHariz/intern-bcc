@@ -13,6 +13,7 @@ type IUserRepository interface {
 	UpdateUser(userUpdate *domain.Users) error
 	LikeProduct(likeProduct *domain.LikeProduct) error
 	DeleteLikeProduct(likedProduct *domain.LikeProduct) error
+	CreateHasMentor(mentor *domain.HasMentor) error
 }
 
 type UserRepository struct {
@@ -84,6 +85,19 @@ func (r *UserRepository) DeleteLikeProduct(likedProduct *domain.LikeProduct) err
 	tx := r.db.Begin()
 
 	err := r.db.Table("user_like_product").Delete(likedProduct, likedProduct).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
+func (r *UserRepository) CreateHasMentor(mentor *domain.HasMentor) error {
+	tx := r.db.Begin()
+
+	err := r.db.Table("has_mentor").Create(mentor).Error
 	if err != nil {
 		tx.Rollback()
 		return err

@@ -29,7 +29,7 @@ type UsecaseParam struct {
 
 func NewUsecase(usecaseParam UsecaseParam) *Usecase {
 	userUsecase := NewUserUsecase(usecaseParam.Repository.UserRepository, usecaseParam.Repository.ProductRepository, usecaseParam.Jwt, usecaseParam.Supabase)
-	transactionUsecase := NewTransactionUsecase(usecaseParam.Repository.TransactionRepository, usecaseParam.Jwt, usecaseParam.Midtrans)
+	transactionUsecase := NewTransactionUsecase(usecaseParam.Repository.TransactionRepository, usecaseParam.Repository.UserRepository , usecaseParam.Jwt, usecaseParam.Midtrans)
 	productUsecase := NewProductUsecase(usecaseParam.Repository.ProductRepository, usecaseParam.Jwt, usecaseParam.Repository.MerchantSQLRepository, usecaseParam.Repository.CategoryRepository,usecaseParam.Supabase)
 	mentorUsecase := NewMentorUsecase(usecaseParam.Repository.MentorRepository, usecaseParam.Jwt, usecaseParam.Supabase)
 	merchantUsecase := NewMerchantUsecase(usecaseParam.Repository.MerchantSQLRepository, usecaseParam.Repository.MerchantRedisRepository, usecaseParam.Jwt, usecaseParam.GoMail, usecaseParam.Supabase)

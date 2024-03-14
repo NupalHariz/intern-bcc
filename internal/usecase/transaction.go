@@ -22,13 +22,15 @@ type ITransactionUsecase interface {
 
 type TransactionUsecase struct {
 	transactionRepository repository.ITransactionRepository
+	userRepository repository.IUserRepository
 	jwt                   jwt.IJwt
 	midTrans              midtrans.IMidTrans
 }
 
-func NewTransactionUsecase(transactionRepository repository.ITransactionRepository, jwt jwt.IJwt, midTrans midtrans.IMidTrans) ITransactionUsecase {
+func NewTransactionUsecase(transactionRepository repository.ITransactionRepository, userRepository repository.IUserRepository, jwt jwt.IJwt, midTrans midtrans.IMidTrans) ITransactionUsecase {
 	return &TransactionUsecase{
 		transactionRepository: transactionRepository,
+		userRepository: userRepository,
 		jwt:                   jwt,
 		midTrans:              midTrans,
 	}
@@ -140,6 +142,20 @@ func (u *TransactionUsecase) VerifyTransaction(payload map[string]interface{}) a
 			Code:    http.StatusInternalServerError,
 			Message: "an error occured when update transaction",
 			Err:     err,
+		}
+	}
+
+	mentor := domain.HasMentor{
+		UserId: transaction.UserId,
+		MentorId: transaction.MentorId,
+	}
+
+	err = u.userRepository.CreateHasMentor(&mentor)
+	if err != nil {
+		return response.ErrorObject{
+			Code: http.StatusInternalServerError,
+			Message: "an error occured when create mentor and student relation",
+			Err: err,
 		}
 	}
 
