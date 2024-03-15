@@ -11,9 +11,9 @@ type Merchants struct {
 	Id            int        `json:"id"`
 	UserId        uuid.UUID  `json:"user_id" gorm:"type:varchar(36);unique"`
 	MerchantName  string     `json:"store_name"`
-	University    string     `json:"university"`
+	UniversityId  int        `json:"-"`
 	Faculty       string     `json:"faculty"`
-	Province      string     `json:"province"`
+	ProvinceId    int        `json:"-"`
 	City          string     `json:"city"`
 	PhoneNumber   string     `json:"phone_number"`
 	Instagram     string     `json:"instagram"`

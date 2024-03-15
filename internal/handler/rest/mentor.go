@@ -14,6 +14,7 @@ func (r *Rest) CreateMentor(c *gin.Context) {
 	err := c.ShouldBindJSON(&mentorRequest)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		return
 	}
 
 	errorObject := r.usecase.MentorUsecase.CreateMentor(mentorRequest)
@@ -23,7 +24,7 @@ func (r *Rest) CreateMentor(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "succes create mentor", nil)
+	response.SuccessWithoutData(c, "succes create mentor")
 }
 
 func (r *Rest) UpdateMentor(c *gin.Context) {
@@ -31,12 +32,14 @@ func (r *Rest) UpdateMentor(c *gin.Context) {
 	mentorId, err := strconv.Atoi(mentorIdString)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to parsing mentor id", err)
+		return
 	}
 
 	var mentorUpdate domain.MentorUpdate
 	err = c.ShouldBindJSON(&mentorUpdate)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		return
 	}
 
 	mentor, errorObject := r.usecase.MentorUsecase.UpdateMentor(mentorId, mentorUpdate)
@@ -54,6 +57,7 @@ func (r *Rest) UploadMentorPicture(c *gin.Context) {
 	mentorId, err := strconv.Atoi(mentorIdString)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to parsing mentor id", err)
+		return
 	}
 
 	mentorPicture, err := c.FormFile("mentor_picture")

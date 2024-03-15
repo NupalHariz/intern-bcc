@@ -15,6 +15,8 @@ type Repository struct {
 	ExperienceRepository  IExperienceRepository
 	CategoryRepository    ICategoryRepository
 	InformationRepository IInformationRepository
+	UniversityRepository  IUniversityRepository
+	ProvinceRepository    IProvinceRepository
 }
 
 func NewRepository(db *gorm.DB, r *redis.Client) *Repository {
@@ -27,6 +29,8 @@ func NewRepository(db *gorm.DB, r *redis.Client) *Repository {
 	experienceRepository := NewExperienceRepository(db)
 	categoryRepository := NewCategoryRepository(db)
 	informationRepository := NewInformationRepository(db)
+	universityRepository := NewUniversityRepository(db)
+	provinceRepository := NewProvinceRepository(db)
 
 	return &Repository{
 		UserRepository:        userRepository,
@@ -38,5 +42,7 @@ func NewRepository(db *gorm.DB, r *redis.Client) *Repository {
 		ExperienceRepository:  experienceRepository,
 		CategoryRepository:    categoryRepository,
 		InformationRepository: informationRepository,
+		UniversityRepository:  universityRepository,
+		ProvinceRepository:    provinceRepository,
 	}
 }

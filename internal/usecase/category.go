@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type ICategoryUsecase interface{
+type ICategoryUsecase interface {
 	CreateCategory(categoryRequest domain.CategoryRequest) any
 }
 
@@ -20,16 +20,26 @@ func NewCategoryUsecase(categoryRepository repository.ICategoryRepository) ICate
 }
 
 func (u *CategoryUsecase) CreateCategory(categoryRequest domain.CategoryRequest) any {
+	var category domain.Categories
+	err := u.categoryRepository.GetCategory(&category, domain.Categories{Category: categoryRequest.Category})
+	if err == nil {
+		return response.ErrorObject{
+			Code:    http.StatusBadRequest,
+			Message: "Category already exist",
+			Err:     err,
+		}
+	}
+
 	newCategory := domain.Categories{
 		Category: categoryRequest.Category,
 	}
 
-	err := u.categoryRepository.CreateCategory(&newCategory)
+	err = u.categoryRepository.CreateCategory(&newCategory)
 	if err != nil {
 		return response.ErrorObject{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: "an error occured when creating category",
-			Err: err,
+			Err:     err,
 		}
 	}
 

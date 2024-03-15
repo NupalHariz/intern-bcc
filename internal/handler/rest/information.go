@@ -25,7 +25,7 @@ func (r *Rest) CreateInformation(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "success create information", nil)
+	response.SuccessWithoutData(c, "success create information")
 }
 
 func (r *Rest) UpdateInformation(c *gin.Context) {

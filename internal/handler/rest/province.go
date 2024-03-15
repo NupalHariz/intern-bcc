@@ -8,21 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (r *Rest) CreateCategory(c *gin.Context) {
-	var category domain.CategoryRequest
-
-	err := c.ShouldBindJSON(&category)
+func (r *Rest) CreateProvince(c *gin.Context) {
+	var provinceRequest domain.Province
+	err := c.ShouldBindJSON(&provinceRequest)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
-		return
 	}
 
-	errorObject := r.usecase.CategoryUsecase.CreateCategory(category)
+	errorObject := r.usecase.ProvinceUsecase.CreateProvince(provinceRequest)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success create category")
+	response.SuccessWithoutData(c, "success create province")
 }

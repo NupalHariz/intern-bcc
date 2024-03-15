@@ -97,7 +97,7 @@ func (r *UserRepository) DeleteLikeProduct(likedProduct *domain.LikeProduct) err
 func (r *UserRepository) CreateHasMentor(mentor *domain.HasMentor) error {
 	tx := r.db.Begin()
 
-	err := r.db.Table("has_mentor").Create(mentor).Error
+	err := r.db.Table("has_mentors").Create(mentor).Error
 	if err != nil {
 		tx.Rollback()
 		return err

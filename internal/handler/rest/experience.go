@@ -13,11 +13,12 @@ func (r *Rest) AddExperience(c *gin.Context) {
 	mentorIdString := c.Param("mentorId")
 	mentorId, _ := strconv.Atoi(mentorIdString)
 
-	var experienceRequest []domain.ExperienceRequest
+	var experienceRequest domain.ExperienceRequest
 
 	err := c.ShouldBindJSON(&experienceRequest)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		return
 	}
 
 	errorObject := r.usecase.ExperienceUsecase.AddExperience(experienceRequest, mentorId)
@@ -27,5 +28,5 @@ func (r *Rest) AddExperience(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "succes create experience", nil)
+	response.SuccessWithoutData(c, "succes create experience")
 }

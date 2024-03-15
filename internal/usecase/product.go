@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/jwt"
@@ -9,6 +10,8 @@ import (
 	"intern-bcc/pkg/supabase"
 	"mime/multipart"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -74,6 +77,14 @@ func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.Pro
 			Code:    http.StatusNotFound,
 			Message: "category not found",
 			Err:     err,
+		}
+	}
+
+	if category.Id > 6 {
+		return response.ErrorObject{
+			Code:    http.StatusBadRequest,
+			Message: "can not uset this category for product",
+			Err:     errors.New("can not user information category"),
 		}
 	}
 
@@ -195,7 +206,6 @@ func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId int, produ
 		}
 	}
 
-
 	if product.ProductPhoto != "" {
 		err = u.supabase.Delete(product.ProductPhoto)
 		if err != nil {
@@ -207,6 +217,10 @@ func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId int, produ
 		}
 	}
 
+	productPhoto.Filename = fmt.Sprintf("%v-%v", time.Now().String(), productPhoto.Filename)
+	if strings.Contains(productPhoto.Filename, " ") {
+		productPhoto.Filename = strings.Replace(productPhoto.Filename, " ", "-", -1)
+	}
 	newProductPhoto, err := u.supabase.Upload(productPhoto)
 	if err != nil {
 		return domain.Products{}, response.ErrorObject{

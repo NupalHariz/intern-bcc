@@ -12,16 +12,22 @@ import (
 	"intern-bcc/pkg/middleware"
 	"intern-bcc/pkg/midtrans"
 	"intern-bcc/pkg/supabase"
+	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	infrastucture.LoadEnv()
+	err := godotenv.Load()
+	env := os.Getenv("ENV")
+	if err != nil && env == "" {
+		log.Fatal("error loading .env file")
+	}
 	cache.ConnectToRedis()
 	database.ConnectToDB()
 	database.Migrate()
-	infrastucture.SeedData(database.DB)
 
 	//Repository
 	repository := repository.NewRepository(database.DB, cache.RDB)
@@ -43,32 +49,12 @@ func main() {
 
 	//Middleware
 	middleware := middleware.MiddlerwareInit(jwt, usecase)
+	infrastucture.SeedData(database.DB)
 
 	//Rest
 	rest := rest.NewRest(gin.New(), usecase, middleware)
 
-	rest.MerchantEndpoint()
-	rest.UserEndpoint()
-	rest.MentorEndpoint()
-	rest.ProductEndpoint()
-	rest.InformationEndpoint()
+	rest.MountEndpoint()
 
 	rest.Run()
 }
-
-//CATATAN URGENT RIL
-//Gimana cara dari link email change password bisa ke halaman bikin password?
-//Kasus gimana kalo ada orang yang file fotonya sama
-//Bikin env untuk host dan port SUDAH MAS
-
-//To-Do Today
-//Bikin tabel khsusu untuk univ dan provinsi
-//Kirim pesan ke email yang bagus(Terutama yang buat recovery password(butuh host dan port))
-//Bikin respon error yang bener(kasih info succes: true atau false)
-//Bikin respon yang ga ngebalikin nilai
-//Jangan lupa benerin respon untuk update
-//Endpoint dijadiin 1 aja
-
-//CATATAN
-//Jangan lupa bikin text untuk OTP(text yang sekarang masih nyoba-nyoba)
-//ENV nya samain buat yang kayak di deploy

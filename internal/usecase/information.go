@@ -2,12 +2,15 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/response"
 	"intern-bcc/pkg/supabase"
 	"mime/multipart"
 	"net/http"
+	"strings"
+	"time"
 )
 
 type IInformationUsecase interface {
@@ -42,7 +45,7 @@ func (u *InformationUsecase) CreateInformation(informationRequest domain.Informa
 		}
 	}
 
-	if category.Id < 7 {
+	if category.Id < 7 || category.Id > 9 {
 		return response.ErrorObject{
 			Code:    http.StatusBadRequest,
 			Message: "wrong category",
@@ -127,6 +130,11 @@ func (u *InformationUsecase) UploadInformationPhoto(informationId int, informati
 				Err:     err,
 			}
 		}
+	}
+
+	informationPhoto.Filename = fmt.Sprintf("%v-%v", time.Now().String(), informationPhoto.Filename)
+	if strings.Contains(informationPhoto.Filename, " ") {
+		informationPhoto.Filename = strings.Replace(informationPhoto.Filename, " ", "-", -1)
 	}
 
 	newInformationPhoto, err := u.supabase.Upload(informationPhoto)

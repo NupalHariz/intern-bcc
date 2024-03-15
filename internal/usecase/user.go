@@ -13,6 +13,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -27,7 +29,7 @@ type IUserUsecase interface {
 	UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.Users, any)
 	UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) any
 	PasswordRecovery(userParam domain.UserParam, ctx context.Context) any
-	ChangePassword(ctx context.Context, email string, verPass string, passwordRequest domain.PasswordUpdate) any
+	ChangePassword(ctx context.Context, name string, verPass string, passwordRequest domain.PasswordUpdate) any
 	LikeProduct(c *gin.Context, productId int) any
 	DeleteLikeProduct(c *gin.Context, productId int) any
 }
@@ -195,6 +197,10 @@ func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhot
 		}
 	}
 
+	userPhoto.Filename = fmt.Sprintf("%v-%v", time.Now().String(), userPhoto.Filename)
+	if strings.Contains(userPhoto.Filename, " "){
+		userPhoto.Filename = strings.Replace(userPhoto.Filename, " ", "-", -1)
+	}
 	newProfilePicture, err := u.supabase.Upload(userPhoto)
 	if err != nil {
 		return response.ErrorObject{
@@ -238,7 +244,6 @@ func checkNullUpdateUser(user domain.Users, userUpdate domain.UserUpdate) domain
 }
 
 func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.Context) any {
-	fmt.Println(userParam.Email)
 	var user domain.Users
 	err := u.userRepository.GetUser(&user, domain.UserParam{Email: userParam.Email})
 	if err != nil {
@@ -248,8 +253,6 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 			Err:     err,
 		}
 	}
-
-	fmt.Println(user.Email)
 
 	var emailVerPassword string
 	emailVerPassword, emailVerHash, err := newEmailVerification()
@@ -261,8 +264,12 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 		}
 	}
 
-	fmt.Println(emailVerHash)
-	err = u.redis.SetEmailVerHash(ctx, user.Email, emailVerHash)
+	userName := user.Name
+	if strings.Contains(user.Name, " ") {
+		userName = strings.Replace(userName, " ", "-", -1)
+	}
+
+	err = u.redis.SetEmailVerHash(ctx, userName, emailVerHash)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusInternalServerError,
@@ -278,9 +285,9 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 	subject := "Account Recovery"
 	htmlBody := `<html>
 	<h1>Click Link to Change Password</h1>
-	<h2><a href="http://`+ domainName + `/accountrecovery/` + user.Name + `/` + emailVerPassword + `">click here</a></h2>
+	<h2><a href="http://` + domainName + `/api/v1/` + `recoveryaccount/` + userName + `/` + emailVerPassword + `">click here</a></h2>
 	</html>`
-	
+
 	err = u.goMail.SendGoMail(subject, htmlBody, user.Email)
 	if err != nil {
 		return response.ErrorObject{
@@ -293,18 +300,8 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 	return nil
 }
 
-func (u *UserUsecase) ChangePassword(ctx context.Context, email string, verPass string, passwordRequest domain.PasswordUpdate) any {
-	var user domain.Users
-	err := u.userRepository.GetUser(&user, domain.UserParam{Email: email})
-	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "user not found",
-			Err:     err,
-		}
-	}
-
-	verPassHash, err := u.redis.GetEmailVerHash(ctx, email)
+func (u *UserUsecase) ChangePassword(ctx context.Context, name string, verPass string, passwordRequest domain.PasswordUpdate) any {
+	verPassHash, err := u.redis.GetEmailVerHash(ctx, name)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusInternalServerError,
@@ -327,6 +324,20 @@ func (u *UserUsecase) ChangePassword(ctx context.Context, email string, verPass 
 		return response.ErrorObject{
 			Code:    http.StatusBadRequest,
 			Message: "an error occured when update password",
+			Err:     err,
+		}
+	}
+
+	userName := name
+	if strings.Contains(name, "-") {
+		userName = strings.Replace(userName, "-", " ", -1)
+	}
+	var user domain.Users
+	err = u.userRepository.GetUser(&user, domain.UserParam{Name: userName})
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusNotFound,
+			Message: "user not found",
 			Err:     err,
 		}
 	}

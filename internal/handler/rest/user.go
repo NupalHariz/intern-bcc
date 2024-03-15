@@ -26,7 +26,7 @@ func (r *Rest) Register(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "success create account", nil)
+	response.SuccessWithoutData(c, "success create account")
 }
 
 func (r *Rest) Login(c *gin.Context) {
@@ -92,7 +92,7 @@ func (r *Rest) UploadUserPhoto(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "success updload photo", nil)
+	response.SuccessWithoutData(c, "success updload photo")
 }
 
 func (r *Rest) PasswordRecovery(c *gin.Context) {
@@ -112,12 +112,12 @@ func (r *Rest) PasswordRecovery(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "please check your email", nil)
+	response.SuccessWithoutData(c, "please check your email")
 }
 
 func (r *Rest) ChangePassword(c *gin.Context) {
 	ctx := c.Request.Context()
-	email := c.Param("email")
+	name := c.Param("name")
 	verPass := c.Param("verPass")
 
 	var passwordRequest domain.PasswordUpdate
@@ -127,14 +127,14 @@ func (r *Rest) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	errorObject := r.usecase.UserUsecase.ChangePassword(ctx, email, verPass, passwordRequest)
+	errorObject := r.usecase.UserUsecase.ChangePassword(ctx, name, verPass, passwordRequest)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
 		return
 	}
 
-	response.Success(c, "success change password", nil)
+	response.SuccessWithoutData(c, "success change password")
 }
 
 func (r *Rest) LikeProduct(c *gin.Context) {
@@ -151,7 +151,7 @@ func (r *Rest) LikeProduct(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "success like product", nil)
+	response.SuccessWithoutData(c, "success like product")
 }
 
 func (r *Rest) DeleteLikeProduct(c *gin.Context) {
@@ -168,5 +168,5 @@ func (r *Rest) DeleteLikeProduct(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "success delete liked product", nil)
+	response.SuccessWithoutData(c, "success delete liked product")
 }

@@ -45,5 +45,5 @@ func (r *Rest) VerifyTransaction(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "payment success", nil)
+	response.SuccessWithoutData(c, "payment success")
 }

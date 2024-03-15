@@ -24,35 +24,28 @@ func NewRest(c *gin.Engine, usecase *usecase.Usecase, middleware middleware.IMid
 	}
 }
 
-func (r *Rest) UserEndpoint() {
+func (r *Rest) MountEndpoint() {
 	routerGroup := r.router.Group("api/v1")
-
-	user := routerGroup.Group("/user")
 
 	routerGroup.POST("/register", r.Register)
 	routerGroup.POST("/login", r.Login)
-	routerGroup.POST("/recoveryaccount", r.PasswordRecovery)
-	routerGroup.PATCH("/recoveryaccount/:email/:verPass", r.ChangePassword)
+	routerGroup.GET("/recoveryaccount", r.PasswordRecovery)
+	routerGroup.PATCH("/recoveryaccount/:name/:verPass", r.ChangePassword)
 
+	//User Endpoint
+	user := routerGroup.Group("/user")
 	user.PATCH("/:userId", r.middleware.Authentication, r.UpdateUser)
 	user.PATCH("/:userId/upload-photo", r.middleware.Authentication, r.UploadUserPhoto)
 
-}
-
-func (r *Rest) MerchantEndpoint() {
-	routerGroup := r.router.Group("api/v1")
-
+	//Merchant Endpoint
 	merchant := routerGroup.Group("/merchant")
 	merchant.POST("/", r.middleware.Authentication, r.CreateMerchant)
 	merchant.GET("/verify", r.middleware.Authentication, r.SendOtp)
 	merchant.PATCH("/verify", r.middleware.Authentication, r.VerifyOtp)
 	merchant.PATCH("/:merchantId", r.middleware.Authentication, r.UpdateMerchant)
 	merchant.PATCH("/:merchantId/upload-photo", r.middleware.Authentication, r.UploadMerchantPhoto)
-}
 
-func (r *Rest) MentorEndpoint() {
-	routerGroup := r.router.Group("api/v1")
-
+	//Mentor Endpoint
 	mentor := routerGroup.Group("/mentor")
 	mentor.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateMentor)
 	mentor.PATCH("/:mentorId", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UpdateMentor)
@@ -60,26 +53,33 @@ func (r *Rest) MentorEndpoint() {
 	mentor.POST("/:mentorId/transaction", r.middleware.Authentication, r.CreateTransaction)
 	mentor.POST("/:mentorId/experience", r.middleware.Authentication, r.middleware.OnlyAdmin, r.AddExperience)
 	mentor.POST("/payment-callback", r.VerifyTransaction)
-}
 
-func (r *Rest) ProductEndpoint() {
-	routerGroup := r.router.Group("api/v1")
-
+	//Product Endpoint
 	product := routerGroup.Group("/product")
 	product.POST("/", r.middleware.Authentication, r.CreateProduct)
 	product.PATCH("/:productId", r.middleware.Authentication, r.UpdateProduct)
 	product.PATCH("/:productId/product-photo", r.middleware.Authentication, r.UploadProductPhoto)
 	product.POST("/:productId", r.middleware.Authentication, r.LikeProduct)
 	product.DELETE("/:productId", r.middleware.Authentication, r.DeleteLikeProduct)
-}
 
-func (r *Rest) InformationEndpoint() {
-	routerGroup := r.router.Group("api/v1")
 
+	//Information Endpoint
 	information := routerGroup.Group("/information")
 	information.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateInformation)
 	information.PATCH("/:informationId", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UpdateInformation)
 	information.PATCH("/:informationId/upload-photo", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UploadInformationPhoto)
+
+	//Category Endpoint
+	category := routerGroup.Group("/category")
+	category.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateCategory)
+
+	//Province Endpoint
+	province := routerGroup.Group("/province")
+	province.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateProvince)
+
+	//University Endpoint
+	university := routerGroup.Group("/university")
+	university.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateUniversity)
 }
 
 func (r *Rest) Run() {

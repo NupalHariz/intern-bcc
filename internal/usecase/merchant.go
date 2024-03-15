@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/gomail"
@@ -14,6 +15,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,21 +29,26 @@ type IMerchantUsecase interface {
 }
 
 type MerchantUsecase struct {
-	redis              repository.IRedis
-	merchantRepository repository.IMerchantRepository
-	jwt                jwt.IJwt
-	goMail             gomail.IGoMail
-	supabase           supabase.ISupabase
+	redis                repository.IRedis
+	merchantRepository   repository.IMerchantRepository
+	provinceRepository   repository.IProvinceRepository
+	universityRepository repository.IUniversityRepository
+	jwt                  jwt.IJwt
+	goMail               gomail.IGoMail
+	supabase             supabase.ISupabase
 }
 
 func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, redis repository.IRedis,
-	jwt jwt.IJwt, goMail gomail.IGoMail, supabase supabase.ISupabase) IMerchantUsecase {
+	jwt jwt.IJwt, goMail gomail.IGoMail, supabase supabase.ISupabase,
+	universityRepository repository.IUniversityRepository, provinceRepository repository.IProvinceRepository) IMerchantUsecase {
 	return &MerchantUsecase{
-		redis:              redis,
-		merchantRepository: merchantRepository,
-		jwt:                jwt,
-		goMail:             goMail,
-		supabase:           supabase,
+		redis:                redis,
+		merchantRepository:   merchantRepository,
+		provinceRepository:   provinceRepository,
+		universityRepository: universityRepository,
+		jwt:                  jwt,
+		goMail:               goMail,
+		supabase:             supabase,
 	}
 }
 
@@ -59,15 +66,35 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 		merchantRequest.MerchantName = strings.Split(user.Email, "@")[0] + " Store's"
 	}
 
+	var province domain.Province
+	err = u.provinceRepository.GetProvince(&province, domain.Province{Province: merchantRequest.Province})
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusBadRequest,
+			Message: "province does not exist",
+			Err:     err,
+		}
+	}
+
+	var university domain.Universities
+	err = u.universityRepository.GetUniversity(&university, domain.Universities{University: merchantRequest.University})
+	if err != nil {
+		return response.ErrorObject{
+			Code:    http.StatusBadRequest,
+			Message: "university does not exist",
+			Err:     err,
+		}
+	}
+
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err == nil {
 		merchant := domain.Merchants{
 			Id:           merchant.Id,
 			MerchantName: merchantRequest.MerchantName,
-			University:   merchantRequest.University,
+			UniversityId: university.Id,
 			Faculty:      merchantRequest.Faculty,
-			Province:     merchantRequest.Province,
+			ProvinceId:   province.Id,
 			City:         merchantRequest.City,
 			PhoneNumber:  merchantRequest.PhoneNumber,
 			Instagram:    merchantRequest.Instagram,
@@ -88,9 +115,9 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 	newMerchant := domain.Merchants{
 		UserId:       user.Id,
 		MerchantName: merchantRequest.MerchantName,
-		University:   merchantRequest.University,
+		UniversityId: university.Id,
 		Faculty:      merchantRequest.Faculty,
-		Province:     merchantRequest.Province,
+		ProvinceId:   province.Id,
 		City:         merchantRequest.City,
 		PhoneNumber:  merchantRequest.PhoneNumber,
 		Instagram:    merchantRequest.Instagram,
@@ -122,9 +149,9 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err != nil {
 		return response.ErrorObject{
-			Code: http.StatusNotFound,
+			Code:    http.StatusNotFound,
 			Message: "please create your merchant before verify",
-			Err: err,
+			Err:     err,
 		}
 	}
 
@@ -295,6 +322,11 @@ func (u *MerchantUsecase) UploadMerchantPhoto(c *gin.Context, merchantId int, me
 				Err:     err,
 			}
 		}
+	}
+
+	merchantPhoto.Filename = fmt.Sprintf("%v-%v", time.Now().String(), merchantPhoto.Filename)
+	if strings.Contains(merchantPhoto.Filename, " ") {
+		merchantPhoto.Filename = strings.Replace(merchantPhoto.Filename, " ", "-", -1)
 	}
 
 	newMerchantPhoto, err := u.supabase.Upload(merchantPhoto)

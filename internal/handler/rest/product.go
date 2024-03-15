@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
@@ -25,7 +26,7 @@ func (r *Rest) CreateProduct(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "success create product", nil)
+	response.SuccessWithoutData(c, "success create product")
 }
 
 func (r *Rest) UpdateProduct(c *gin.Context) {
@@ -57,12 +58,14 @@ func (r *Rest) UploadProductPhoto(c *gin.Context) {
 	productIdString := c.Param("productId")
 	productId, err := strconv.Atoi(productIdString)
 	if err != nil {
+		fmt.Println(1)
 		response.Failed(c, http.StatusBadRequest, "failed to parsing product id", err)
 		return
 	}
 
 	productPhoto, err := c.FormFile("product_photo")
 	if err != nil {
+		fmt.Println(2)
 		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
 		return
 	}

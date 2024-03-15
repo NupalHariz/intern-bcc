@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/jwt"
@@ -8,6 +9,8 @@ import (
 	"intern-bcc/pkg/supabase"
 	"mime/multipart"
 	"net/http"
+	"strings"
+	"time"
 )
 
 type IMentorUsecase interface {
@@ -105,6 +108,11 @@ func (u *MentorUsecase) UploadMentorPhoto(mentorId int, mentorPicture *multipart
 		}
 	}
 
+	mentorPicture.Filename = fmt.Sprintf("%v-%v", time.Now().String(), mentorPicture.Filename)
+	if strings.Contains(mentorPicture.Filename, " ") {
+		mentorPicture.Filename = strings.Replace(mentorPicture.Filename, " ", "-", -1)
+	}
+
 	newMentorPicture, err := u.supabase.Upload(mentorPicture)
 	if err != nil {
 		return domain.Mentors{}, response.ErrorObject{
@@ -117,10 +125,10 @@ func (u *MentorUsecase) UploadMentorPhoto(mentorId int, mentorPicture *multipart
 	mentor.MentorPicture = newMentorPicture
 	err = u.mentorRepository.UpdateMentor(&mentor)
 	if err != nil {
-		return domain.Mentors{}, response.ErrorObject {
-			Code: http.StatusInternalServerError,
+		return domain.Mentors{}, response.ErrorObject{
+			Code:    http.StatusInternalServerError,
 			Message: "an error occured when update mentor",
-			Err: err,
+			Err:     err,
 		}
 	}
 

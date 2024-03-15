@@ -47,6 +47,113 @@ func SeedData(db *gorm.DB) {
 		}
 	}
 
+	var totalProvince int64
+	if err := db.Model(domain.Province{}).Count(&totalProvince).Error; err != nil {
+		log.Fatal("error occured when counting province: ", err)
+	}
+
+	if totalProvince == 0 {
+		if err := generateProvince(db); err != nil {
+			log.Fatal("error occured when creating province: ", err)
+		}
+	}
+
+	var totalUniversity int64
+	if err := db.Model(domain.Universities{}).Count(&totalUniversity).Error; err != nil {
+		log.Fatal("error occured when counting university: ", err)
+	}
+
+	if totalUniversity == 0 {
+		if err := generateUniversity(db); err != nil {
+			log.Fatal("error occured when creating university: ", err)
+		}
+	}
+}
+
+func generateProvince(db *gorm.DB) error {
+	var provinces []*domain.Province
+
+	provinces = append(provinces,
+		&domain.Province{
+			Province: "Jawa Timur",
+		},
+		&domain.Province{
+			Province: "Jawa Tengah",
+		},
+		&domain.Province{
+			Province: "Jawa Barat",
+		},
+		&domain.Province{
+			Province: "DKI Jakarta",
+		},
+		&domain.Province{
+			Province: "DIY Yogyakarta",
+		},
+		&domain.Province{
+			Province: "Sumatera Utara",
+		},
+		&domain.Province{
+			Province: "Sumatera Barat",
+		},
+		&domain.Province{
+			Province: "Kalimantan Utara",
+		},
+		&domain.Province{
+			Province: "Kalimantan Barat",
+		},
+		&domain.Province{
+			Province: "Bali",
+		},
+	)
+
+	if err := db.CreateInBatches(&provinces, 10).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func generateUniversity(db *gorm.DB) error {
+	var universities []*domain.Universities
+
+	universities = append(universities,
+		&domain.Universities{
+			University: "Universitas Brawijaya",
+		},
+		&domain.Universities{
+			University: "Universitas Airlangga",
+		},
+		&domain.Universities{
+			University: "Universitas Negeri Semarang",
+		},
+		&domain.Universities{
+			University: "Universitas Negeri Surabaya",
+		},
+		&domain.Universities{
+			University: "Universitas Negeri Malang",
+		},
+		&domain.Universities{
+			University: "Institut Teknologi Surabaya",
+		},
+		&domain.Universities{
+			University: "Universitas Muhammadiyah Malang",
+		},
+		&domain.Universities{
+			University: "Universitas Jember",
+		},
+		&domain.Universities{
+			University: "Universitas Surabaya",
+		},
+		&domain.Universities{
+			University: "Universitas Kristen Petra",
+		},
+	)
+
+	if err := db.CreateInBatches(&universities, 10).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func generateMentor(db *gorm.DB) error {

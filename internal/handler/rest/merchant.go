@@ -25,7 +25,7 @@ func (r *Rest) CreateMerchant(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "success to create merchant, please verify your merchant", nil)
+	response.SuccessWithoutData(c, "success to create merchant, please verify your merchant")
 }
 
 func (r *Rest) SendOtp(c *gin.Context) {
@@ -38,7 +38,7 @@ func (r *Rest) SendOtp(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "please check your email for verification", nil)
+	response.SuccessWithoutData(c, "please check your email for verification")
 }
 
 func (r *Rest) VerifyOtp(c *gin.Context) {
@@ -58,7 +58,7 @@ func (r *Rest) VerifyOtp(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "verification succeed", nil)
+	response.SuccessWithoutData(c, "verification succeed")
 }
 
 func (r *Rest) UpdateMerchant(c *gin.Context) {
@@ -84,7 +84,7 @@ func (r *Rest) UpdateMerchant(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "success update merchant", nil)
+	response.SuccessWithoutData(c, "success update merchant")
 }
 
 func (r *Rest) UploadMerchantPhoto(c *gin.Context) {

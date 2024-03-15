@@ -9,10 +9,10 @@ import (
 
 type Users struct {
 	Id             uuid.UUID      `json:"-" gorm:"type:varchar(36);primary key"`
-	Name           string         `json:"name"`
+	Name           string         `json:"name" gorm:"unique"`
 	Email          string         `json:"email" gorm:"unique"`
 	Password       string         `json:"-"`
-	Gender         string         `json:"gender" gorm:"type:enum('Laki-laki', 'Perempuan', '')"`
+	Gender         string         `json:"gender" gorm:"type:enum('Laki-laki', 'Perempuan', '') NULL"`
 	PlaceBirth     string         `json:"place_birth"`
 	DateBirth      string         `json:"date_birth"`
 	IsAdmin        bool           `json:"-"`
@@ -39,6 +39,7 @@ type UserLogin struct {
 type UserParam struct {
 	Id    uuid.UUID `json:"-"`
 	Email string    `json:"email"`
+	Name  string    `json:"name"`
 }
 
 type LoginResponse struct {
