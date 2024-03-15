@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"mime/multipart"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -270,8 +271,17 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 		}
 	}
 
-	link := fmt.Sprintf("http://localhost:8080/accountrecovery/%v/%v", user.Email, emailVerPassword)
-	err = u.goMail.SendGoMail(link, user.Email)
+	address := os.Getenv("APP_ADDRESS")
+	host := os.Getenv("APP_PORT")
+	domainName := fmt.Sprintf("%v:%v", address, host)
+
+	subject := "Account Recovery"
+	htmlBody := `<html>
+	<h1>Click Link to Change Password</h1>
+	<h2><a href="http://`+ domainName + `/accountrecovery/` + user.Name + `/` + emailVerPassword + `">click here</a></h2>
+	</html>`
+	
+	err = u.goMail.SendGoMail(subject, htmlBody, user.Email)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusBadRequest,
@@ -315,9 +325,9 @@ func (u *UserUsecase) ChangePassword(ctx context.Context, email string, verPass 
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(passwordRequest.Password), 10)
 	if err != nil {
 		return response.ErrorObject{
-			Code: http.StatusBadRequest,
+			Code:    http.StatusBadRequest,
 			Message: "an error occured when update password",
-			Err: err,
+			Err:     err,
 		}
 	}
 
@@ -325,9 +335,9 @@ func (u *UserUsecase) ChangePassword(ctx context.Context, email string, verPass 
 	err = u.userRepository.UpdateUser(&user)
 	if err != nil {
 		return response.ErrorObject{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: "an error occured when update password",
-			Err: err,
+			Err:     err,
 		}
 	}
 

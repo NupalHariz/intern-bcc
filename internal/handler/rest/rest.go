@@ -1,9 +1,11 @@
 package rest
 
 import (
+	"fmt"
 	"intern-bcc/internal/usecase"
 	"intern-bcc/pkg/middleware"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -81,7 +83,10 @@ func (r *Rest) InformationEndpoint() {
 }
 
 func (r *Rest) Run() {
-	err := r.router.Run()
+	address := os.Getenv("APP_ADDRESS")
+	port := os.Getenv("APP_PORT")
+
+	err := r.router.Run(fmt.Sprintf("%s:%s", address, port))
 	if err != nil {
 		log.Fatal("failed to run router")
 	}

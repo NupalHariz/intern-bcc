@@ -118,6 +118,16 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
 		}
 	}
 
+	var merchant domain.Merchants
+	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
+	if err != nil {
+		return response.ErrorObject{
+			Code: http.StatusNotFound,
+			Message: "please create your merchant before verify",
+			Err: err,
+		}
+	}
+
 	otp := rand.Intn(999999-100000) + 100000
 	otpString := strconv.Itoa(otp)
 
@@ -130,7 +140,12 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
 		}
 	}
 
-	err = u.goMail.SendGoMail(otpString, user.Email)
+	subject := "Verify Merchant Code"
+	htmlBody := `<html>
+	<p>Berikut adalah kode otp mu <strong>` + otpString + `</strong></p>
+	</html>`
+
+	err = u.goMail.SendGoMail(subject, htmlBody, user.Email)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusInternalServerError,

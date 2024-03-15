@@ -59,16 +59,16 @@ func main() {
 //CATATAN URGENT RIL
 //Gimana cara dari link email change password bisa ke halaman bikin password?
 //Kasus gimana kalo ada orang yang file fotonya sama
-//Bikin env untuk host dan port
+//Bikin env untuk host dan port SUDAH MAS
 
 //To-Do Today
 //Bikin tabel khsusu untuk univ dan provinsi
-//Kirim pesan ke email yang bagus
+//Kirim pesan ke email yang bagus(Terutama yang buat recovery password(butuh host dan port))
 //Bikin respon error yang bener(kasih info succes: true atau false)
 //Bikin respon yang ga ngebalikin nilai
+//Jangan lupa benerin respon untuk update
 //Endpoint dijadiin 1 aja
 
 //CATATAN
 //Jangan lupa bikin text untuk OTP(text yang sekarang masih nyoba-nyoba)
 //ENV nya samain buat yang kayak di deploy
-//Jangan lupa benerin respon untuk update

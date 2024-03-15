@@ -1,15 +1,14 @@
 package gomail
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
 	"gopkg.in/gomail.v2"
 )
 
-type IGoMail interface{
-	SendGoMail(otp string, email string) error
+type IGoMail interface {
+	SendGoMail(subject string, htmlBody string, toEmail string) error
 }
 
 type Gomail struct {
@@ -27,21 +26,30 @@ func GoMailInit() IGoMail {
 	password := os.Getenv("GOMAIL_PASSWORD")
 
 	return &Gomail{
-		host: host,
-		port: port,
+		host:     host,
+		port:     port,
 		username: username,
 		password: password,
 	}
 }
 
-func (g *Gomail) SendGoMail(otp string, email string) error {
-	body := fmt.Sprintf("This is your OTP code <b>%v</b> and <i>I'm Naufal</i>!", otp)
+func (g *Gomail) SendGoMail(subject string, htmlBody string, toEmail string) error {
+	// msg := []byte(
+	// 	"From: " + g.username + "\r\n" +
+	// 		"To: " + toEmail + "\r\n" +
+	// 		"Subject: " + subject + "\r\n" +
+	// 		"MIME: MIME-version: 1.0\r\n" +
+	// 		"Content-Type: text/html; charset=\"UTF-8\";\r\n" +
+	// 		"\r\n" +
+	// 		htmlBody)
+
+	// body := fmt.Sprintf("This is your OTP code <b>%v</b> and <i>I'm Naufal</i>!", otp)
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", g.username)
-	m.SetHeader("To", email)
-	m.SetHeader("Subject", "Test Send Email")
-	m.SetBody("text/html", body)
+	m.SetHeader("To", toEmail)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", htmlBody)
 
 	d := gomail.NewDialer(g.host, g.port, g.username, g.password)
 
