@@ -27,17 +27,17 @@ type IMerchantUsecase interface {
 }
 
 type MerchantUsecase struct {
-	merchantRedis      repository.IMerchantRedis
+	redis              repository.IRedis
 	merchantRepository repository.IMerchantRepository
 	jwt                jwt.IJwt
 	goMail             gomail.IGoMail
 	supabase           supabase.ISupabase
 }
 
-func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, merchantRedis repository.IMerchantRedis,
+func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, redis repository.IRedis,
 	jwt jwt.IJwt, goMail gomail.IGoMail, supabase supabase.ISupabase) IMerchantUsecase {
 	return &MerchantUsecase{
-		merchantRedis:      merchantRedis,
+		redis:              redis,
 		merchantRepository: merchantRepository,
 		jwt:                jwt,
 		goMail:             goMail,
@@ -121,7 +121,7 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) any {
 	otp := rand.Intn(999999-100000) + 100000
 	otpString := strconv.Itoa(otp)
 
-	err = u.merchantRedis.SetOTP(ctx, user.Id, otpString)
+	err = u.redis.SetOTP(ctx, user.Id, otpString)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusInternalServerError,
@@ -152,7 +152,7 @@ func (u *MerchantUsecase) VerifyOtp(c *gin.Context, ctx context.Context, verifyO
 		}
 	}
 
-	stringOtp, err := u.merchantRedis.GetOTP(ctx, user.Id)
+	stringOtp, err := u.redis.GetOTP(ctx, user.Id)
 	if err != nil {
 		return response.ErrorObject{
 			Code:    http.StatusInternalServerError,

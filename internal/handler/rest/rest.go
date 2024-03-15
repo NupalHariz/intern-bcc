@@ -29,6 +29,8 @@ func (r *Rest) UserEndpoint() {
 
 	routerGroup.POST("/register", r.Register)
 	routerGroup.POST("/login", r.Login)
+	routerGroup.POST("/recoveryaccount", r.PasswordRecovery)
+	routerGroup.PATCH("/recoveryaccount/:email/:verPass", r.ChangePassword)
 
 	user.PATCH("/:userId", r.middleware.Authentication, r.UpdateUser)
 	user.PATCH("/:userId/upload-photo", r.middleware.Authentication, r.UploadUserPhoto)
@@ -41,7 +43,7 @@ func (r *Rest) MerchantEndpoint() {
 	merchant := routerGroup.Group("/merchant")
 	merchant.POST("/", r.middleware.Authentication, r.CreateMerchant)
 	merchant.GET("/verify", r.middleware.Authentication, r.SendOtp)
-	merchant.PUT("/verify", r.middleware.Authentication, r.VerifyOtp)
+	merchant.PATCH("/verify", r.middleware.Authentication, r.VerifyOtp)
 	merchant.PATCH("/:merchantId", r.middleware.Authentication, r.UpdateMerchant)
 	merchant.PATCH("/:merchantId/upload-photo", r.middleware.Authentication, r.UploadMerchantPhoto)
 }

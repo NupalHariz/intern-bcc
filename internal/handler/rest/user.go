@@ -95,6 +95,48 @@ func (r *Rest) UploadUserPhoto(c *gin.Context) {
 	response.Success(c, "success updload photo", nil)
 }
 
+func (r *Rest) PasswordRecovery(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var userParam domain.UserParam
+	err := c.ShouldBindJSON(&userParam)
+	if err != nil {
+		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		return
+	}
+
+	errorObject := r.usecase.UserUsecase.PasswordRecovery(userParam, ctx)
+	if errorObject != nil {
+		errorObject := errorObject.(response.ErrorObject)
+		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+		return
+	}
+
+	response.Success(c, "please check your email", nil)
+}
+
+func (r *Rest) ChangePassword(c *gin.Context) {
+	ctx := c.Request.Context()
+	email := c.Param("email")
+	verPass := c.Param("verPass")
+
+	var passwordRequest domain.PasswordUpdate
+	err := c.ShouldBindJSON(&passwordRequest)
+	if err != nil {
+		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		return
+	}
+
+	errorObject := r.usecase.UserUsecase.ChangePassword(ctx, email, verPass, passwordRequest)
+	if errorObject != nil {
+		errorObject := errorObject.(response.ErrorObject)
+		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+		return
+	}
+
+	response.Success(c, "success change password", nil)
+}
+
 func (r *Rest) LikeProduct(c *gin.Context) {
 	productIdString := c.Param("productId")
 	productId, err := strconv.Atoi(productIdString)

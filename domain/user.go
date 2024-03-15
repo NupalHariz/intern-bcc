@@ -22,7 +22,7 @@ type Users struct {
 	Merchant       Merchants      `json:"-"  gorm:"foreignKey:user_id;references:id"`
 	Transactions   []Transactions `json:"-" gorm:"foreignKey:user_id;references:id"`
 	LikeProduct    []Products     `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:product_id"`
-	HasMentors     []Mentors      `json:"-" gorm:"many2many:has_mentors;foreignKey:id;joinForeignKey:user_id;references;joinReferences:mentor_id"`
+	HasMentors     []Mentors      `json:"-" gorm:"many2many:has_mentors;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:mentor_id"`
 }
 
 type UserRequest struct {
@@ -38,7 +38,7 @@ type UserLogin struct {
 
 type UserParam struct {
 	Id    uuid.UUID `json:"-"`
-	Email string    `json:"-"`
+	Email string    `json:"email"`
 }
 
 type LoginResponse struct {
@@ -50,6 +50,10 @@ type UserUpdate struct {
 	Gender     string `json:"gender"`
 	PlaceBirth string `json:"place_birth"`
 	DateBirth  string `json:"date_birth"`
+}
+
+type PasswordUpdate struct {
+	Password string `json:"password"`
 }
 
 type UploadUserPhoto struct {

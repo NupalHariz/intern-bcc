@@ -6,15 +6,15 @@ import (
 )
 
 type Repository struct {
-	UserRepository          IUserRepository
-	ProductRepository       IProductRepository
-	TransactionRepository   ITransactionRepository
-	MerchantSQLRepository   IMerchantRepository
-	MerchantRedisRepository IMerchantRedis
-	MentorRepository        IMentorRepository
-	ExperienceRepository    IExperienceRepository
-	CategoryRepository      ICategoryRepository
-	InformationRepository   IInformationRepository
+	UserRepository        IUserRepository
+	ProductRepository     IProductRepository
+	TransactionRepository ITransactionRepository
+	MerchantSQLRepository IMerchantRepository
+	RedisRepository       IRedis
+	MentorRepository      IMentorRepository
+	ExperienceRepository  IExperienceRepository
+	CategoryRepository    ICategoryRepository
+	InformationRepository IInformationRepository
 }
 
 func NewRepository(db *gorm.DB, r *redis.Client) *Repository {
@@ -22,21 +22,21 @@ func NewRepository(db *gorm.DB, r *redis.Client) *Repository {
 	productRepository := NewProductRepository(db)
 	transactionRepository := NewTransactionRepository(db)
 	merchantSQLRepository := NewMerchantRepository(db)
-	merchantRedisRepository := NewMerchantRedis(r)
+	redisRepository := NewRedis(r)
 	mentorRepository := NewMentorRepository(db)
 	experienceRepository := NewExperienceRepository(db)
 	categoryRepository := NewCategoryRepository(db)
 	informationRepository := NewInformationRepository(db)
 
 	return &Repository{
-		UserRepository:          userRepository,
-		ProductRepository:       productRepository,
-		TransactionRepository:   transactionRepository,
-		MerchantSQLRepository:   merchantSQLRepository,
-		MerchantRedisRepository: merchantRedisRepository,
-		MentorRepository:        mentorRepository,
-		ExperienceRepository:    experienceRepository,
-		CategoryRepository:      categoryRepository,
-		InformationRepository:   informationRepository,
+		UserRepository:        userRepository,
+		ProductRepository:     productRepository,
+		TransactionRepository: transactionRepository,
+		MerchantSQLRepository: merchantSQLRepository,
+		RedisRepository:       redisRepository,
+		MentorRepository:      mentorRepository,
+		ExperienceRepository:  experienceRepository,
+		CategoryRepository:    categoryRepository,
+		InformationRepository: informationRepository,
 	}
 }
