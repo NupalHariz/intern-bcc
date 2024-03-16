@@ -4,9 +4,9 @@ import (
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (r *Rest) CreateMentor(c *gin.Context) {
@@ -29,7 +29,7 @@ func (r *Rest) CreateMentor(c *gin.Context) {
 
 func (r *Rest) UpdateMentor(c *gin.Context) {
 	mentorIdString := c.Param("mentorId")
-	mentorId, err := strconv.Atoi(mentorIdString)
+	mentorId, err := uuid.Parse(mentorIdString)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to parsing mentor id", err)
 		return
@@ -54,7 +54,7 @@ func (r *Rest) UpdateMentor(c *gin.Context) {
 
 func (r *Rest) UploadMentorPicture(c *gin.Context) {
 	mentorIdString := c.Param("mentorId")
-	mentorId, err := strconv.Atoi(mentorIdString)
+	mentorId, err := uuid.Parse(mentorIdString)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to parsing mentor id", err)
 		return

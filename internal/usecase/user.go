@@ -31,7 +31,7 @@ type IUserUsecase interface {
 	PasswordRecovery(userParam domain.UserParam, ctx context.Context) any
 	ChangePassword(ctx context.Context, name string, verPass string, passwordRequest domain.PasswordUpdate) any
 	LikeProduct(c *gin.Context, productId int) any
-	DeleteLikeProduct(c *gin.Context, productId int) any
+	DeleteLikeProduct(c *gin.Context, productId uuid.UUID) any
 }
 
 type UserUsecase struct {
@@ -198,7 +198,7 @@ func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhot
 	}
 
 	userPhoto.Filename = fmt.Sprintf("%v-%v", time.Now().String(), userPhoto.Filename)
-	if strings.Contains(userPhoto.Filename, " "){
+	if strings.Contains(userPhoto.Filename, " ") {
 		userPhoto.Filename = strings.Replace(userPhoto.Filename, " ", "-", -1)
 	}
 	newProfilePicture, err := u.supabase.Upload(userPhoto)
@@ -410,7 +410,7 @@ func (u *UserUsecase) LikeProduct(c *gin.Context, productId int) any {
 	return nil
 }
 
-func (u *UserUsecase) DeleteLikeProduct(c *gin.Context, productId int) any {
+func (u *UserUsecase) DeleteLikeProduct(c *gin.Context, productId uuid.UUID) any {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
 		return response.ErrorObject{

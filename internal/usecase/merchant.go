@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type IMerchantUsecase interface {
@@ -113,6 +114,7 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 	}
 
 	newMerchant := domain.Merchants{
+		Id:           uuid.New(),
 		UserId:       user.Id,
 		MerchantName: merchantRequest.MerchantName,
 		UniversityId: university.Id,

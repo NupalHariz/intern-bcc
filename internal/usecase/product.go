@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type IProductUsecase interface {
@@ -89,6 +90,7 @@ func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.Pro
 	}
 
 	newProduct := domain.Products{
+		Id:          uuid.New(),
 		Name:        productRequest.Name,
 		MerchantId:  merchant.Id,
 		Description: productRequest.Description,

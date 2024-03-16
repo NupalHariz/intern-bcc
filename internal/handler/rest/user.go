@@ -156,7 +156,7 @@ func (r *Rest) LikeProduct(c *gin.Context) {
 
 func (r *Rest) DeleteLikeProduct(c *gin.Context) {
 	productIdString := c.Param("productId")
-	productId, err := strconv.Atoi(productIdString)
+	productId, err := uuid.Parse(productIdString)
 	if err != nil {
 		response.Failed(c, http.StatusBadRequest, "failed to parsing product id", err)
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 type Merchants struct {
-	Id            int        `json:"id"`
+	Id            uuid.UUID  `json:"id"`
 	UserId        uuid.UUID  `json:"user_id" gorm:"type:varchar(36);unique"`
 	MerchantName  string     `json:"store_name"`
 	UniversityId  int        `json:"-"`

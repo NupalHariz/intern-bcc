@@ -3,11 +3,13 @@ package domain
 import (
 	"mime/multipart"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Products struct {
-	Id           int       `json:"-"`
-	MerchantId   int       `json:"-"`
+	Id           uuid.UUID `json:"-"`
+	MerchantId   uuid.UUID `json:"-"`
 	CategoryId   int       `json:"-"`
 	Name         string    `json:"name"`
 	Price        uint      `json:"price"`

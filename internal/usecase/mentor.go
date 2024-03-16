@@ -11,12 +11,14 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type IMentorUsecase interface {
 	CreateMentor(mentorRequest domain.MentorRequest) any
-	UpdateMentor(mentorId int, mentorUpdate domain.MentorUpdate) (domain.Mentors, any)
-	UploadMentorPhoto(mentorId int, mentorPicture *multipart.FileHeader) (domain.Mentors, any)
+	UpdateMentor(mentorId uuid.UUID, mentorUpdate domain.MentorUpdate) (domain.Mentors, any)
+	UploadMentorPhoto(mentorId uuid.UUID, mentorPicture *multipart.FileHeader) (domain.Mentors, any)
 }
 
 type MentorUsecase struct {
@@ -35,6 +37,7 @@ func NewMentorUsecase(mentorRepository repository.IMentorRepository, jwt jwt.IJw
 
 func (u *MentorUsecase) CreateMentor(mentorRequest domain.MentorRequest) any {
 	newMentor := domain.Mentors{
+		Id:          uuid.New(),
 		Name:        mentorRequest.Name,
 		CurrentJob:  mentorRequest.CurrentJob,
 		Description: mentorRequest.Description,
@@ -53,7 +56,7 @@ func (u *MentorUsecase) CreateMentor(mentorRequest domain.MentorRequest) any {
 	return nil
 }
 
-func (u *MentorUsecase) UpdateMentor(mentorId int, mentorUpdate domain.MentorUpdate) (domain.Mentors, any) {
+func (u *MentorUsecase) UpdateMentor(mentorId uuid.UUID, mentorUpdate domain.MentorUpdate) (domain.Mentors, any) {
 	var mentor domain.Mentors
 	err := u.mentorRepository.GetMentor(&mentor, domain.Mentors{Id: mentorId})
 	if err != nil {
@@ -86,7 +89,7 @@ func (u *MentorUsecase) UpdateMentor(mentorId int, mentorUpdate domain.MentorUpd
 	return mentor, nil
 }
 
-func (u *MentorUsecase) UploadMentorPhoto(mentorId int, mentorPicture *multipart.FileHeader) (domain.Mentors, any) {
+func (u *MentorUsecase) UploadMentorPhoto(mentorId uuid.UUID, mentorPicture *multipart.FileHeader) (domain.Mentors, any) {
 	var mentor domain.Mentors
 	err := u.mentorRepository.GetMentor(&mentor, domain.Mentors{Id: mentorId})
 	if err != nil {

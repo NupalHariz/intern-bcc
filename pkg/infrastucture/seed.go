@@ -161,6 +161,7 @@ func generateMentor(db *gorm.DB) error {
 
 	for i := 1; i <= 5; i++ {
 		mentor := &domain.Mentors{
+			Id: uuid.New(),
 			Name:        faker.Name(),
 			CurrentJob:  faker.Word(),
 			Description: faker.Sentence(),

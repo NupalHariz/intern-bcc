@@ -63,5 +63,5 @@ type UploadUserPhoto struct {
 
 type LikeProduct struct {
 	UserId    uuid.UUID `json:"-"`
-	ProductId int       `json:"-"`
+	ProductId uuid.UUID `json:"-"`
 }

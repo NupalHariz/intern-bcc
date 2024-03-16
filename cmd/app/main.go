@@ -58,13 +58,3 @@ func main() {
 
 	rest.Run()
 }
-
-//CATATAN UError
-//Masalh file yg erd.draw.jpg
-
-//To-Do Today
-//Jangan lupa benerin respon untuk update
-
-//CATATAN
-//Jangan lupa bikin text untuk OTP(text yang sekarang masih nyoba-nyoba) SUDAH MAS
-//ENV nya samain buat yang kayak di deploy
