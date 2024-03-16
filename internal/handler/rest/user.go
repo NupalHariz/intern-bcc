@@ -85,14 +85,14 @@ func (r *Rest) UploadUserPhoto(c *gin.Context) {
 		return
 	}
 
-	errorObject := r.usecase.UserUsecase.UploadUserPhoto(c, userId, profilePicture)
+	user, errorObject := r.usecase.UserUsecase.UploadUserPhoto(c, userId, profilePicture)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success updload photo")
+	response.Success(c, "success updload photo", user)
 }
 
 func (r *Rest) PasswordRecovery(c *gin.Context) {

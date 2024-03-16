@@ -16,13 +16,13 @@ import (
 )
 
 type ITransactionUsecase interface {
-	CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (*coreapi.ChargeResponse, any)
+	CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, any)
 	VerifyTransaction(payload map[string]interface{}) any
 }
 
 type TransactionUsecase struct {
 	transactionRepository repository.ITransactionRepository
-	userRepository repository.IUserRepository
+	userRepository        repository.IUserRepository
 	jwt                   jwt.IJwt
 	midTrans              midtrans.IMidTrans
 }
@@ -30,16 +30,16 @@ type TransactionUsecase struct {
 func NewTransactionUsecase(transactionRepository repository.ITransactionRepository, userRepository repository.IUserRepository, jwt jwt.IJwt, midTrans midtrans.IMidTrans) ITransactionUsecase {
 	return &TransactionUsecase{
 		transactionRepository: transactionRepository,
-		userRepository: userRepository,
+		userRepository:        userRepository,
 		jwt:                   jwt,
 		midTrans:              midTrans,
 	}
 }
 
-func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (*coreapi.ChargeResponse, any) {
+func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, any) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return nil, response.ErrorObject{
+		return domain.TransactionResponse{}, response.ErrorObject{
 			Code:    http.StatusNotFound,
 			Message: "failed to get user id",
 			Err:     err,
@@ -49,7 +49,7 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, tra
 	layoutFormat := "2006-01-02 15:04:05"
 	nullTime, err := time.Parse(layoutFormat, "1970-01-01 00:00:01")
 	if err != nil {
-		return nil, response.ErrorObject{
+		return domain.TransactionResponse{}, response.ErrorObject{
 			Code:    http.StatusInternalServerError,
 			Message: "failed parsing null time",
 			Err:     err,
@@ -61,12 +61,12 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, tra
 		MentorId:    mentorId,
 		Price:       transactionRequest.Price,
 		PaymentType: transactionRequest.PaymentType,
-		PayedAt: nullTime,
+		PayedAt:     nullTime,
 	}
 
 	coreApiRes, err := u.midTrans.ChargeTransaction(newTransaction)
 	if err != nil {
-		return coreApiRes, response.ErrorObject{
+		return domain.TransactionResponse{}, response.ErrorObject{
 			Code:    http.StatusInternalServerError,
 			Message: "an error occured when charge transaction",
 			Err:     err,
@@ -75,14 +75,35 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, tra
 
 	err = u.transactionRepository.CreateTransaction(&newTransaction)
 	if err != nil {
-		return coreApiRes, response.ErrorObject{
+		return domain.TransactionResponse{}, response.ErrorObject{
 			Code:    http.StatusInternalServerError,
 			Message: "an error occured when create transaction",
 			Err:     err,
 		}
 	}
 
-	return coreApiRes, err
+	transactionResponse := generateTransactionResponse(transactionRequest, coreApiRes)
+	
+	return transactionResponse, err
+}
+
+func generateTransactionResponse(transactionRequest domain.TransactionRequest, coreApiRes *coreapi.ChargeResponse) domain.TransactionResponse{
+	transactionResponse := domain.TransactionResponse {
+		TransactionId: coreApiRes.TransactionID,
+		PaymentType: transactionRequest.PaymentType,
+	}
+
+	switch transactionRequest.PaymentType {
+	case "gopay" :
+		transactionResponse.URL = coreApiRes.Actions[0].URL
+	case "mandiri" :
+		transactionResponse.BillKey = coreApiRes.BillKey
+		transactionResponse.BillerCode = coreApiRes.BillerCode
+	default :
+	transactionResponse.VaNumber = coreApiRes.VaNumbers[0].VANumber
+	}
+
+	return transactionResponse
 }
 
 func (u *TransactionUsecase) VerifyTransaction(payload map[string]interface{}) any {
@@ -146,16 +167,16 @@ func (u *TransactionUsecase) VerifyTransaction(payload map[string]interface{}) a
 	}
 
 	mentor := domain.HasMentor{
-		UserId: transaction.UserId,
+		UserId:   transaction.UserId,
 		MentorId: transaction.MentorId,
 	}
 
 	err = u.userRepository.CreateHasMentor(&mentor)
 	if err != nil {
 		return response.ErrorObject{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: "an error occured when create mentor and student relation",
-			Err: err,
+			Err:     err,
 		}
 	}
 

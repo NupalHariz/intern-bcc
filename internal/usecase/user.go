@@ -27,7 +27,7 @@ type IUserUsecase interface {
 	Register(userRequest domain.UserRequest) any
 	Login(userLogin domain.UserLogin) (domain.LoginResponse, any)
 	UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.Users, any)
-	UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) any
+	UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) (domain.Users, any)
 	PasswordRecovery(userParam domain.UserParam, ctx context.Context) any
 	ChangePassword(ctx context.Context, name string, verPass string, passwordRequest domain.PasswordUpdate) any
 	LikeProduct(c *gin.Context, productId int) any
@@ -168,10 +168,10 @@ func (u *UserUsecase) UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate do
 	return user, nil
 }
 
-func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) any {
+func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) (domain.Users, any) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return response.ErrorObject{
+		return domain.Users{}, response.ErrorObject{
 			Code:    http.StatusNotFound,
 			Message: "failed to get user",
 			Err:     err,
@@ -179,7 +179,7 @@ func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhot
 	}
 
 	if user.Id != userId {
-		return response.ErrorObject{
+		return domain.Users{}, response.ErrorObject{
 			Code:    http.StatusUnauthorized,
 			Message: "access denied",
 			Err:     errors.New("can not change other people profile"),
@@ -189,7 +189,7 @@ func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhot
 	if user.ProfilePicture != "" {
 		err = u.supabase.Delete(user.ProfilePicture)
 		if err != nil {
-			return response.ErrorObject{
+			return domain.Users{}, response.ErrorObject{
 				Code:    http.StatusInternalServerError,
 				Message: "error occured when deleting old profile picture",
 				Err:     err,
@@ -203,7 +203,7 @@ func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhot
 	}
 	newProfilePicture, err := u.supabase.Upload(userPhoto)
 	if err != nil {
-		return response.ErrorObject{
+		return domain.Users{}, response.ErrorObject{
 			Code:    http.StatusInternalServerError,
 			Message: "failed to upload photo",
 			Err:     err,
@@ -213,14 +213,14 @@ func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhot
 	user.ProfilePicture = newProfilePicture
 	err = u.userRepository.UpdateUser(&user)
 	if err != nil {
-		return response.ErrorObject{
+		return domain.Users{}, response.ErrorObject{
 			Code:    http.StatusInternalServerError,
 			Message: "error occured when update user",
 			Err:     err,
 		}
 	}
 
-	return nil
+	return user, nil
 }
 
 func checkNullUpdateUser(user domain.Users, userUpdate domain.UserUpdate) domain.Users {

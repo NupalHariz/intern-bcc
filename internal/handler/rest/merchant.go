@@ -77,14 +77,14 @@ func (r *Rest) UpdateMerchant(c *gin.Context) {
 		return
 	}
 
-	errorObject := r.usecase.MerchantUsecase.UpdateMerchant(c, merchantId, updateMerchant)
+	merchant, errorObject := r.usecase.MerchantUsecase.UpdateMerchant(c, merchantId, updateMerchant)
 	if errorObject != nil {
 		errorObject := errorObject.(response.ErrorObject)
 		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success update merchant")
+	response.Success(c, "success update merchant", merchant)
 }
 
 func (r *Rest) UploadMerchantPhoto(c *gin.Context) {
