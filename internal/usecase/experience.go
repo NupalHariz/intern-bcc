@@ -8,7 +8,7 @@ import (
 )
 
 type IExperieceUsecase interface {
-	AddExperience(experience domain.ExperienceRequest, mentorId int) any
+	AddExperience(experience domain.ExperienceRequest, mentorId int) error
 }
 
 type ExperienceUsecase struct {
@@ -19,19 +19,15 @@ func NewExperienceRepository(experienceRepository repository.IExperienceReposito
 	return &ExperienceUsecase{experienceRepository}
 }
 
-func (u *ExperienceUsecase) AddExperience(experienceRequest domain.ExperienceRequest, mentorId int) any {
+func (u *ExperienceUsecase) AddExperience(experienceRequest domain.ExperienceRequest, mentorId int) error {
 	experience := domain.Experiences{
 		Experience: experienceRequest.Experience,
-		MentorId: mentorId,
+		MentorId:   mentorId,
 	}
 
 	err := u.experienceRepository.AddExperience(&experience)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when create experience",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "an error occured when create experience", err)
 	}
 
 	return nil

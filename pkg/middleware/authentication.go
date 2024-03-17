@@ -13,7 +13,7 @@ import (
 func (m *Middleware) Authentication(c *gin.Context) {
 	bearer := c.GetHeader("Authorization")
 	if bearer == "" {
-		response.Failed(c, http.StatusUnauthorized, "token is empty", errors.New("need token"))
+		response.Failed(c, response.NewError(http.StatusUnauthorized, "token is empty", errors.New("need token")))
 		c.Abort()
 		return
 	}
@@ -21,15 +21,15 @@ func (m *Middleware) Authentication(c *gin.Context) {
 	tokenString := strings.Split(bearer, " ")[1]
 	userId, err := m.jwtAuth.ValidateToken(tokenString)
 	if err != nil {
-		response.Failed(c, http.StatusUnauthorized, "failed to validate token", err)
+		response.Failed(c, response.NewError(http.StatusUnauthorized, "failed to validate token", err))
 		c.Abort()
 		return
 	}
 
-	user, errorObject := m.usecase.UserUsecase.GetUser(domain.UserParam{Id: userId})
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	user, err := m.usecase.UserUsecase.GetUser(domain.UserParam{Id: userId})
+	if err != nil {
+
+		response.Failed(c, err)
 	}
 
 	c.Set("user", user)

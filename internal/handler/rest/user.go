@@ -4,7 +4,6 @@ import (
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -15,18 +14,18 @@ func (r *Rest) Register(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&userRequest)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	errorObject := r.usecase.UserUsecase.Register(userRequest)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.UserUsecase.Register(userRequest)
+	if err != nil {
+
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success create account")
+	response.Success(c, "success create account", nil)
 }
 
 func (r *Rest) Login(c *gin.Context) {
@@ -34,14 +33,13 @@ func (r *Rest) Login(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&userLogin)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	loginRespone, errorObject := r.usecase.UserUsecase.Login(userLogin)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	loginRespone, err := r.usecase.UserUsecase.Login(userLogin)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
@@ -51,21 +49,23 @@ func (r *Rest) Login(c *gin.Context) {
 func (r *Rest) UpdateUser(c *gin.Context) {
 	userIdString := c.Param("userId")
 	userId, err := uuid.Parse(userIdString)
+	// var userParam domain.UserParam
+	// err = c.ShouldBindUri(&userParam)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to parsing user id", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing user id", err))
 	}
 	var userUpdate domain.UserUpdate
 
 	err = c.ShouldBindJSON(&userUpdate)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	updatedUser, errorObject := r.usecase.UserUsecase.UpdateUser(c, userId, userUpdate)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	updatedUser, err := r.usecase.UserUsecase.UpdateUser(c, userId, userUpdate)
+	if err != nil {
+
+		response.Failed(c, err)
 		return
 	}
 
@@ -76,19 +76,18 @@ func (r *Rest) UploadUserPhoto(c *gin.Context) {
 	userIdString := c.Param("userId")
 	userId, err := uuid.Parse(userIdString)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to parsing user id", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing user id", err))
 	}
 
 	profilePicture, err := c.FormFile("profile_picture")
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	user, errorObject := r.usecase.UserUsecase.UploadUserPhoto(c, userId, profilePicture)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	user, err := r.usecase.UserUsecase.UploadUserPhoto(c, userId, profilePicture)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
@@ -101,18 +100,17 @@ func (r *Rest) PasswordRecovery(c *gin.Context) {
 	var userParam domain.UserParam
 	err := c.ShouldBindJSON(&userParam)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	errorObject := r.usecase.UserUsecase.PasswordRecovery(userParam, ctx)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.UserUsecase.PasswordRecovery(userParam, ctx)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "please check your email")
+	response.Success(c, "please check your email", nil)
 }
 
 func (r *Rest) ChangePassword(c *gin.Context) {
@@ -123,50 +121,47 @@ func (r *Rest) ChangePassword(c *gin.Context) {
 	var passwordRequest domain.PasswordUpdate
 	err := c.ShouldBindJSON(&passwordRequest)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	errorObject := r.usecase.UserUsecase.ChangePassword(ctx, name, verPass, passwordRequest)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.UserUsecase.ChangePassword(ctx, name, verPass, passwordRequest)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success change password")
+	response.Success(c, "success change password", nil)
 }
 
 func (r *Rest) LikeProduct(c *gin.Context) {
 	productIdString := c.Param("productId")
-	productId, err := strconv.Atoi(productIdString)
+	productId, err := uuid.Parse(productIdString)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to parsing product id", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing product id", err))
 	}
 
-	errorObject := r.usecase.UserUsecase.LikeProduct(c, productId)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.UserUsecase.LikeProduct(c, productId)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success like product")
+	response.Success(c, "success like product", nil)
 }
 
 func (r *Rest) DeleteLikeProduct(c *gin.Context) {
 	productIdString := c.Param("productId")
 	productId, err := uuid.Parse(productIdString)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to parsing product id", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing product id", err))
 	}
 
-	errorObject := r.usecase.UserUsecase.DeleteLikeProduct(c, productId)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.UserUsecase.DeleteLikeProduct(c, productId)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success delete liked product")
+	response.Success(c, "success delete liked product", nil)
 }

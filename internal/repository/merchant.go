@@ -1,16 +1,16 @@
 package repository
 
 import (
-	"fmt"
 	"intern-bcc/domain"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type IMerchantRepository interface {
 	GetMerchant(merchant *domain.Merchants, param domain.MerchantParam) error
 	CreateMerchant(newMerchant *domain.Merchants) error
-	UpdateMerchant(updateMerchant *domain.Merchants) error
+	UpdateMerchant(updateMerchant *domain.UpdateMerchant, merchantId uuid.UUID) error
 }
 
 type MerchantRepository struct {
@@ -31,28 +31,19 @@ func (r *MerchantRepository) GetMerchant(merchant *domain.Merchants, param domai
 }
 
 func (r *MerchantRepository) CreateMerchant(newMerchant *domain.Merchants) error {
-	tx := r.db.Begin()
-
 	err := r.db.Create(newMerchant).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }
 
-func (r *MerchantRepository) UpdateMerchant(updateMerchant *domain.Merchants) error {
-	tx := r.db.Begin()
-
-	err := r.db.Debug().Where("id = ?", updateMerchant.Id).Updates(updateMerchant).Error
+func (r *MerchantRepository) UpdateMerchant(updateMerchant *domain.UpdateMerchant, merchantId uuid.UUID) error {
+	err := r.db.Debug().Where("id = ?", merchantId).Updates(updateMerchant).Error
 	if err != nil {
-		fmt.Println(err)
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }

@@ -30,5 +30,5 @@ type TransactionResponse struct {
 	VaNumber      string `json:"va_number"`
 	BillerCode    string `json:"biller_code"`
 	BillKey       string `json:"bill_key"`
-	URL string `json:"url"`
+	URL           string `json:"url"`
 }

@@ -17,13 +17,12 @@ func (r *Rest) CreateTransaction(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&transactionRequest)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 	}
 
-	coreApiRes, errorObject := r.usecase.TransactionUsecase.CreateTransaction(c, mentorId, transactionRequest)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	coreApiRes, err := r.usecase.TransactionUsecase.CreateTransaction(c, mentorId, transactionRequest)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
@@ -35,15 +34,14 @@ func (r *Rest) VerifyTransaction(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&payLoad)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 	}
 
-	errorObject := r.usecase.TransactionUsecase.VerifyTransaction(payLoad)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.TransactionUsecase.VerifyTransaction(payLoad)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "payment success")
+	response.Success(c, "payment success", nil)
 }

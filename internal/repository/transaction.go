@@ -30,30 +30,19 @@ func (r *TransactionsRepository) GetTransaction(transaction *domain.Transactions
 }
 
 func (r *TransactionsRepository) CreateTransaction(newTransaction *domain.Transactions) error {
-	tx := r.db.Begin()
-
 	err := r.db.Debug().Create(newTransaction).Error
 	if err != nil{
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }
 
 func (r *TransactionsRepository) UpdateTransaction(transaction *domain.Transactions) error {
-	tx := r.db.Begin()
-
-	err := r.db.Where("id = ?", transaction.Id).Updates(domain.Transactions{
-		PayedAt: transaction.PayedAt,
-		IsPayed: transaction.IsPayed,
-	}).Error
+	err := r.db.Save(transaction).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }

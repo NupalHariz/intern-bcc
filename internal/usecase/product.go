@@ -18,9 +18,9 @@ import (
 )
 
 type IProductUsecase interface {
-	CreateProduct(c *gin.Context, productRequest domain.ProductRequest) any
-	UpdateProduct(c *gin.Context, productId int, updateProduct domain.ProductUpdate) (domain.Products, any)
-	UploadProductPhoto(c *gin.Context, productId int, productPhoto *multipart.FileHeader) (domain.Products, any)
+	CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error
+	UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.Products, error)
+	UploadProductPhoto(c *gin.Context, productId uuid.UUID, productPhoto *multipart.FileHeader) (domain.Products, error)
 }
 
 type ProductUsecase struct {
@@ -43,50 +43,31 @@ func NewProductUsecase(productRepository repository.IProductRepository, jwt jwt.
 	}
 }
 
-func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.ProductRequest) any {
+func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get login user",
-			Err:     err,
-		}
+		return response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get user merchant",
-			Err:     err,
-		}
+		return response.NewError(http.StatusNotFound, "an er", err)
 	}
 
 	if !merchant.IsActive {
-		return response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "can't make product",
-			Err:     errors.New("please verify your merchant"),
-		}
+		return response.NewError(http.StatusNotFound, "failed to create product", errors.New("please verify your merchant"))
 	}
 
 	var category domain.Categories
 	err = u.categoryRepository.GetCategory(&category, domain.Categories{Category: productRequest.Category})
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "category not found",
-			Err:     err,
-		}
+		return response.NewError(http.StatusNotFound, "category not found", err)
 	}
 
 	if category.Id > 6 {
-		return response.ErrorObject{
-			Code:    http.StatusBadRequest,
-			Message: "can not uset this category for product",
-			Err:     errors.New("can not user information category"),
-		}
+		return response.NewError(http.StatusBadRequest, "can no use this category for product", errors.New("can not use information category"))
+
 	}
 
 	newProduct := domain.Products{
@@ -100,147 +81,95 @@ func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.Pro
 
 	err = u.productRepository.CreateProduct(&newProduct)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when creating product",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "an error occured when creating product", err)
 	}
 
 	return nil
 }
 
-func (u *ProductUsecase) UpdateProduct(c *gin.Context, productId int, updateProduct domain.ProductUpdate) (domain.Products, any) {
+func (u *ProductUsecase) UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.Products, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get login user",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	var product domain.Products
-	err = u.productRepository.GetProduct(&product, &domain.ProductParam{Id: productId})
+	err = u.productRepository.GetProduct(&product, domain.ProductParam{Id: productId})
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get product",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
 	}
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "merchant not found",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusNotFound, "merchant not found", err)
 	}
 
 	if merchant.Id != product.MerchantId {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusUnauthorized,
-			Message: "access denied",
-			Err:     errors.New("can not edit other people merchant"),
-		}
+		return domain.Products{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
 	}
 
-	if updateProduct.Name != "" {
-		product.Name = updateProduct.Name
-	}
-	if updateProduct.Price != 0 {
-		product.Price = updateProduct.Price
-	}
-	if updateProduct.Description != "" {
-		product.Description = updateProduct.Description
-	}
-
-	err = u.productRepository.UpdateProduct(&product)
+	err = u.productRepository.UpdateProduct(&updateProduct, product.Id)
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when update product",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusInternalServerError, "an error occured when update product", err)
 	}
 
-	return product, nil
+	var updatedProduct domain.Products
+	err = u.productRepository.GetProduct(&updatedProduct, domain.ProductParam{Id: product.Id})
+	if err != nil {
+		return domain.Products{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated product", err)
+	}
+
+	return updatedProduct, nil
 }
 
-func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId int, productPhoto *multipart.FileHeader) (domain.Products, any) {
+func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId uuid.UUID, productPhoto *multipart.FileHeader) (domain.Products, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get login user",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	var product domain.Products
-	err = u.productRepository.GetProduct(&product, &domain.ProductParam{Id: productId})
+	err = u.productRepository.GetProduct(&product, domain.ProductParam{Id: productId})
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get product",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
 	}
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "merchant not found",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusNotFound, "merchant not found", err)
 	}
 
 	if merchant.Id != product.MerchantId {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusUnauthorized,
-			Message: "access denied",
-			Err:     errors.New("can not edit other people merchant"),
-		}
+		return domain.Products{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
 	}
 
 	if product.ProductPhoto != "" {
 		err = u.supabase.Delete(product.ProductPhoto)
 		if err != nil {
-			return domain.Products{}, response.ErrorObject{
-				Code:    http.StatusInternalServerError,
-				Message: "error occured when deleting old product photo",
-				Err:     err,
-			}
+			return domain.Products{}, response.NewError(http.StatusInternalServerError, "error occured when deleting old product photo", err)
 		}
 	}
 
 	productPhoto.Filename = fmt.Sprintf("%v-%v", time.Now().String(), productPhoto.Filename)
-	if strings.Contains(productPhoto.Filename, " ") {
-		productPhoto.Filename = strings.Replace(productPhoto.Filename, " ", "-", -1)
-	}
+	productPhoto.Filename = strings.Replace(productPhoto.Filename, " ", "-", -1)
+
 	newProductPhoto, err := u.supabase.Upload(productPhoto)
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "failed to upload photo",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusInternalServerError, "failed to upload photo", err)
 	}
 
-	product.ProductPhoto = newProductPhoto
-	err = u.productRepository.UpdateProduct(&product)
+	err = u.productRepository.UpdateProduct(&domain.ProductUpdate{ProductPhoto: newProductPhoto}, product.Id)
 	if err != nil {
-		return domain.Products{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when update product",
-			Err:     err,
-		}
+		return domain.Products{}, response.NewError(http.StatusInternalServerError, "an error occured when update product", err)
 	}
 
-	return product, nil
+	var updatedProduct domain.Products
+	err = u.productRepository.GetProduct(&updatedProduct, domain.ProductParam{Id: product.Id})
+	if err != nil {
+		return domain.Products{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated product", err)
+	}
+
+	return updatedProduct, nil
 }

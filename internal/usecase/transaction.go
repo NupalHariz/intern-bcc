@@ -16,8 +16,8 @@ import (
 )
 
 type ITransactionUsecase interface {
-	CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, any)
-	VerifyTransaction(payload map[string]interface{}) any
+	CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, error)
+	VerifyTransaction(payload map[string]interface{}) error
 }
 
 type TransactionUsecase struct {
@@ -36,24 +36,17 @@ func NewTransactionUsecase(transactionRepository repository.ITransactionReposito
 	}
 }
 
-func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, any) {
+func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.TransactionResponse{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get user id",
-			Err:     err,
-		}
+		return domain.TransactionResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
+	//Null value for Payed_At
 	layoutFormat := "2006-01-02 15:04:05"
 	nullTime, err := time.Parse(layoutFormat, "1970-01-01 00:00:01")
 	if err != nil {
-		return domain.TransactionResponse{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "failed parsing null time",
-			Err:     err,
-		}
+		return domain.TransactionResponse{}, response.NewError(http.StatusInternalServerError, "failed to parsing null time", err)
 	}
 	newTransaction := domain.Transactions{
 		Id:          uuid.New(),
@@ -66,104 +59,72 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, tra
 
 	coreApiRes, err := u.midTrans.ChargeTransaction(newTransaction)
 	if err != nil {
-		return domain.TransactionResponse{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when charge transaction",
-			Err:     err,
-		}
+		return domain.TransactionResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when charge transaction", err)
 	}
 
 	err = u.transactionRepository.CreateTransaction(&newTransaction)
 	if err != nil {
-		return domain.TransactionResponse{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when create transaction",
-			Err:     err,
-		}
+		return domain.TransactionResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when create transaction", err)
 	}
 
 	transactionResponse := generateTransactionResponse(transactionRequest, coreApiRes)
-	
+
 	return transactionResponse, err
 }
 
-func generateTransactionResponse(transactionRequest domain.TransactionRequest, coreApiRes *coreapi.ChargeResponse) domain.TransactionResponse{
-	transactionResponse := domain.TransactionResponse {
+func generateTransactionResponse(transactionRequest domain.TransactionRequest, coreApiRes *coreapi.ChargeResponse) domain.TransactionResponse {
+	transactionResponse := domain.TransactionResponse{
 		TransactionId: coreApiRes.TransactionID,
-		PaymentType: transactionRequest.PaymentType,
+		PaymentType:   transactionRequest.PaymentType,
 	}
 
 	switch transactionRequest.PaymentType {
-	case "gopay" :
+	case "gopay":
 		transactionResponse.URL = coreApiRes.Actions[0].URL
-	case "mandiri" :
+	case "mandiri":
 		transactionResponse.BillKey = coreApiRes.BillKey
 		transactionResponse.BillerCode = coreApiRes.BillerCode
-	default :
-	transactionResponse.VaNumber = coreApiRes.VaNumbers[0].VANumber
+	default:
+		transactionResponse.VaNumber = coreApiRes.VaNumbers[0].VANumber
 	}
 
 	return transactionResponse
 }
 
-func (u *TransactionUsecase) VerifyTransaction(payload map[string]interface{}) any {
+func (u *TransactionUsecase) VerifyTransaction(payload map[string]interface{}) error {
 	transactionIdString, exist := payload["order_id"].(string)
 	if !exist {
-		return response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "transaction not found",
-			Err:     errors.New("can't find the transaction"),
-		}
+		return response.NewError(http.StatusNotFound, "transaction not found", errors.New("can't find the transaction"))
 	}
 
 	success, err := u.midTrans.VerifyPayment(transactionIdString)
 	if !success {
-		return response.ErrorObject{
-			Code:    http.StatusBadRequest,
-			Message: "transaction failed",
-			Err:     err,
-		}
+		return response.NewError(http.StatusBadRequest, "transaction failed", err)
 	}
 
 	transactionId, err := uuid.Parse(transactionIdString)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "failed to parsing string to uuid",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "failed to parsing string to uuid", err)
 	}
 
 	var transaction domain.Transactions
 	transaction.Id = transactionId
 	err = u.transactionRepository.GetTransaction(&transaction)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "transaction not found",
-			Err:     err,
-		}
+		return response.NewError(http.StatusNotFound, "transaction not found", err)
 	}
 
 	layout := "2006-01-02 15:04:05"
 	paymentTime, err := time.Parse(layout, payload["transaction_time"].(string))
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "failed to parsing string to time",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "failed to parsing string to time", err)
 	}
 	transaction.IsPayed = true
 	transaction.PayedAt = paymentTime
 
 	err = u.transactionRepository.UpdateTransaction(&transaction)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when update transaction",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "an error occured when update transaction", err)
 	}
 
 	mentor := domain.HasMentor{
@@ -173,11 +134,7 @@ func (u *TransactionUsecase) VerifyTransaction(payload map[string]interface{}) a
 
 	err = u.userRepository.CreateHasMentor(&mentor)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when create mentor and student relation",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "an error occured when create mentor and student relation", err)
 	}
 
 	return nil

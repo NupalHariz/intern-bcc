@@ -23,4 +23,5 @@ type InformationRequest struct {
 type InformationUpdate struct {
 	Sysnopsis string `json:"synopsis"`
 	Content   string `json:"content"`
+	InformationPhoto string `json:"-"`
 }

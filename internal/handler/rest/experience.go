@@ -17,16 +17,15 @@ func (r *Rest) AddExperience(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&experienceRequest)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	errorObject := r.usecase.ExperienceUsecase.AddExperience(experienceRequest, mentorId)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.ExperienceUsecase.AddExperience(experienceRequest, mentorId)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "succes create experience")
+	response.Success(c, "succes create experience", nil)
 }

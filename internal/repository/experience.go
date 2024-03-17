@@ -19,14 +19,10 @@ func NewExperienceRepository(db *gorm.DB) IExperienceRepository {
 }
 
 func (r *ExperienceRepository) AddExperience(experience *domain.Experiences) error {
-	tx := r.db.Begin()
-
 	err := r.db.Create(experience).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }

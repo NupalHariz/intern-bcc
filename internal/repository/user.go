@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"fmt"
 	"intern-bcc/domain"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -10,7 +12,7 @@ type IUserRepository interface {
 	GetUser(user *domain.Users, param domain.UserParam) error
 	GetLikeProduct(likedProduct *domain.LikeProduct, likeProductParam domain.LikeProduct) error
 	Register(newUser *domain.Users) error
-	UpdateUser(userUpdate *domain.Users) error
+	UpdateUser(userUpdate *domain.UserUpdate, userId uuid.UUID) error
 	LikeProduct(likeProduct *domain.LikeProduct) error
 	DeleteLikeProduct(likedProduct *domain.LikeProduct) error
 	CreateHasMentor(mentor *domain.HasMentor) error
@@ -43,66 +45,49 @@ func (r *UserRepository) GetLikeProduct(likedProduct *domain.LikeProduct, likePr
 }
 
 func (r *UserRepository) Register(newUser *domain.Users) error {
-	tx := r.db.Begin()
-
 	err := r.db.Create(newUser).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }
 
-func (r *UserRepository) UpdateUser(userUpdate *domain.Users) error {
-	tx := r.db.Begin()
-
-	err := r.db.Where("id = ?", userUpdate.Id).Updates(userUpdate).Error
+func (r *UserRepository) UpdateUser(userUpdate *domain.UserUpdate, userId uuid.UUID) error {
+	var user domain.Users
+	err := r.db.Debug().Model(&user).Where("id = ?", userId).Updates(userUpdate).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
+	fmt.Printf("\n\n\n%v\n\n\n", user)
+
 	return nil
 }
 
 func (r *UserRepository) LikeProduct(likeProduct *domain.LikeProduct) error {
-	tx := r.db.Begin()
-
 	err := r.db.Table("user_like_product").Create(likeProduct).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }
 
 func (r *UserRepository) DeleteLikeProduct(likedProduct *domain.LikeProduct) error {
-	tx := r.db.Begin()
-
 	err := r.db.Table("user_like_product").Delete(likedProduct, likedProduct).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }
 
 func (r *UserRepository) CreateHasMentor(mentor *domain.HasMentor) error {
-	tx := r.db.Begin()
-
 	err := r.db.Table("has_mentors").Create(mentor).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }

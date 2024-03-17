@@ -9,7 +9,7 @@ import (
 type IInformationRepository interface{
 	GetInformation(information *domain.Information, informationParam domain.Information) error
 	CreateInformation(newInformation *domain.Information) error
-	UpdateInformation(information *domain.Information) error
+	UpdateInformation(information *domain.InformationUpdate, informationId int) error
 }
 
 type InformationRepository struct {
@@ -42,15 +42,11 @@ func (r *InformationRepository) CreateInformation(newInformation *domain.Informa
 	return nil
 }
 
-func (r *InformationRepository) UpdateInformation(information *domain.Information) error {
-	tx := r.db.Begin()
-
-	err := r.db.Where("id = ?", information.Id).Updates(information).Error
+func (r *InformationRepository) UpdateInformation(information *domain.InformationUpdate, informationId int) error {
+	err := r.db.Where("id = ?", informationId).Updates(information).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }

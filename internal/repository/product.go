@@ -3,13 +3,14 @@ package repository
 import (
 	"intern-bcc/domain"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type IProductRepository interface {
-	GetProduct(product *domain.Products, productParam *domain.ProductParam) error
+	GetProduct(product *domain.Products, productParam domain.ProductParam) error
 	CreateProduct(newProduct *domain.Products) error
-	UpdateProduct(product *domain.Products) error
+	UpdateProduct(product *domain.ProductUpdate, productId uuid.UUID) error
 }
 
 type ProductRepository struct {
@@ -20,7 +21,7 @@ func NewProductRepository(db *gorm.DB) IProductRepository {
 	return &ProductRepository{db}
 }
 
-func (r *ProductRepository) GetProduct(product *domain.Products, productParam *domain.ProductParam) error {
+func (r *ProductRepository) GetProduct(product *domain.Products, productParam domain.ProductParam) error {
 	err := r.db.First(product, productParam).Error
 	if err != nil {
 		return err
@@ -30,27 +31,19 @@ func (r *ProductRepository) GetProduct(product *domain.Products, productParam *d
 }
 
 func (r *ProductRepository) CreateProduct(newProduct *domain.Products) error {
-	tx := r.db.Begin()
-
 	err := r.db.Create(newProduct).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }
 
-func (r *ProductRepository) UpdateProduct(product *domain.Products) error {
-	tx := r.db.Begin()
-
-	err := r.db.Where("id = ?", product.Id).Updates(product).Error
+func (r *ProductRepository) UpdateProduct(product *domain.ProductUpdate, productId uuid.UUID) error {
+	err := r.db.Where("id = ?", productId).Updates(product).Error
 	if err != nil {
-		tx.Rollback()
 		return nil
 	}
 
-	tx.Commit()
 	return nil
 }

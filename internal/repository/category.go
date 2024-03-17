@@ -29,14 +29,10 @@ func (r *CategoryRepository) GetCategory(category *domain.Categories, categoryPa
 }
 
 func (r *CategoryRepository) CreateCategory(category *domain.Categories) error {
-	tx := r.db.Begin()
-
 	err := r.db.Create(category).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }

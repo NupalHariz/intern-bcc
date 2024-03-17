@@ -29,14 +29,10 @@ func (r *UniversityRepository) GetUniversity(university *domain.Universities, un
 }
 
 func (r *UniversityRepository) CreateUniversity(university *domain.Universities) error{
-	tx := r.db.Begin()
-
 	err := r.db.Create(university).Error
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	tx.Commit()
 	return nil
 }

@@ -85,10 +85,10 @@ func (j *jsonWebToken) ValidateToken(tokenString string) (uuid.UUID, error) {
 	return userId, nil
 }
 
-func (j *jsonWebToken)GetLoginUser(c *gin.Context) (domain.Users, error) {
+func (j *jsonWebToken) GetLoginUser(c *gin.Context) (domain.Users, error) {
 	user, ok := c.Get("user")
 	if !ok {
-		return domain.Users{}, errors.New("failed to get user")
+		return domain.Users{}, errors.New("an error occured when get user")
 	}
 
 	return user.(domain.Users), nil

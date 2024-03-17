@@ -8,7 +8,7 @@ import (
 )
 
 type ICategoryUsecase interface {
-	CreateCategory(categoryRequest domain.CategoryRequest) any
+	CreateCategory(categoryRequest domain.CategoryRequest) error
 }
 
 type CategoryUsecase struct {
@@ -19,15 +19,11 @@ func NewCategoryUsecase(categoryRepository repository.ICategoryRepository) ICate
 	return &CategoryUsecase{categoryRepository}
 }
 
-func (u *CategoryUsecase) CreateCategory(categoryRequest domain.CategoryRequest) any {
+func (u *CategoryUsecase) CreateCategory(categoryRequest domain.CategoryRequest) error {
 	var category domain.Categories
 	err := u.categoryRepository.GetCategory(&category, domain.Categories{Category: categoryRequest.Category})
 	if err == nil {
-		return response.ErrorObject{
-			Code:    http.StatusBadRequest,
-			Message: "Category already exist",
-			Err:     err,
-		}
+		return response.NewError(http.StatusBadRequest, "category already exist", err)
 	}
 
 	newCategory := domain.Categories{
@@ -36,11 +32,7 @@ func (u *CategoryUsecase) CreateCategory(categoryRequest domain.CategoryRequest)
 
 	err = u.categoryRepository.CreateCategory(&newCategory)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when creating category",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "an error occured when creating category", err)
 	}
 
 	return nil

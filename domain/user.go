@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"mime/multipart"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,8 +20,8 @@ type Users struct {
 	UpdatedAt      time.Time      `json:"-"`
 	Merchant       Merchants      `json:"-"  gorm:"foreignKey:user_id;references:id"`
 	Transactions   []Transactions `json:"-" gorm:"foreignKey:user_id;references:id"`
-	LikeProduct    []Products     `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:product_id"`
-	HasMentors     []Mentors      `json:"-" gorm:"many2many:has_mentors;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:mentor_id"`
+	LikeProduct    []Products     `json:"-" gorm:"merror2merror:user_like_product;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:product_id"`
+	HasMentors     []Mentors      `json:"-" gorm:"merror2merror:has_mentors;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:mentor_id"`
 }
 
 type UserRequest struct {
@@ -37,7 +36,7 @@ type UserLogin struct {
 }
 
 type UserParam struct {
-	Id    uuid.UUID `json:"-"`
+	Id    uuid.UUID `json:"-" uri:"userId"`
 	Email string    `json:"email"`
 	Name  string    `json:"name"`
 }
@@ -47,21 +46,19 @@ type LoginResponse struct {
 }
 
 type UserUpdate struct {
-	Name       string `json:"name"`
-	Gender     string `json:"gender"`
-	PlaceBirth string `json:"place_birth"`
-	DateBirth  string `json:"date_birth"`
+	Name           string `json:"name"`
+	Gender         string `json:"gender"`
+	PlaceBirth     string `json:"place_birth"`
+	DateBirth      string `json:"date_birth"`
+	ProfilePicture string `json:"-"`
+	Password       string `json:"-"`
 }
 
 type PasswordUpdate struct {
 	Password string `json:"password"`
 }
 
-type UploadUserPhoto struct {
-	ProfilePicture *multipart.FileHeader `json:"profile_picture"`
-}
-
 type LikeProduct struct {
-	UserId    uuid.UUID `json:"-"`
-	ProductId uuid.UUID `json:"-"`
+	UserId    uuid.UUID `json:"user_id"`
+	ProductId uuid.UUID `json:"product_id"`
 }

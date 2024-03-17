@@ -35,7 +35,7 @@ type MerchantRequest struct {
 }
 
 type MerchantParam struct {
-	Id           int       `json:"id"`
+	Id           uuid.UUID `json:"id"`
 	UserId       uuid.UUID `json:"user_id" gorm:"type:varchar(36);unique"`
 	MerchantName string    `json:"store_name"`
 	University   string    `json:"university" binding:"required"`
@@ -49,9 +49,15 @@ type MerchantVerify struct {
 }
 
 type UpdateMerchant struct {
-	MerchantName string `json:"store_name"`
-	PhoneNumber  string `json:"phone_number" binding:"required"`
-	Instagram    string `json:"instagram"`
+	MerchantName  string `json:"store_name"`
+	UniversityId  int    `json:"-"`
+	Faculty       string `json:"-"`
+	ProvinceId    int    `json:"-"`
+	City          string `json:"-"`
+	PhoneNumber   string `json:"phone_number" binding:"required"`
+	Instagram     string `json:"instagram"`
+	MerchantPhoto string `json:"-"`
+	IsActive      bool   `json:"-"`
 }
 
 type UploadMerchantPhoto struct {

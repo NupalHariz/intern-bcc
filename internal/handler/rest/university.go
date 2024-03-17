@@ -9,18 +9,17 @@ import (
 )
 
 func (r *Rest) CreateUniversity(c *gin.Context) {
-	var universityRequest domain.Universities
+	var universityRequest domain.UniversityRequest
 	err := c.ShouldBindJSON(&universityRequest)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 	}
 
-	errorObject := r.usecase.UniversityUsecase.CreateUniversity(universityRequest)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.UniversityUsecase.CreateUniversity(universityRequest)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success create university")
+	response.Success(c, "success create university", nil)
 }

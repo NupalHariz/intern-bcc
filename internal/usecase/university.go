@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/response"
@@ -8,7 +9,7 @@ import (
 )
 
 type IUniversityUsecase interface {
-	CreateUniversity(universityRequest domain.Universities) any
+	CreateUniversity(universityRequest domain.UniversityRequest) error
 }
 
 type UniversityUsecase struct {
@@ -19,15 +20,11 @@ func NewUniversityUsecase(universityRepository repository.IUniversityRepository)
 	return &UniversityUsecase{universityRepository}
 }
 
-func (u *UniversityUsecase) CreateUniversity(universityRequest domain.Universities) any {
+func (u *UniversityUsecase) CreateUniversity(universityRequest domain.UniversityRequest) error {
 	var university domain.Universities
 	err := u.universityRepository.GetUniversity(&university, domain.Universities{University: universityRequest.University})
 	if err == nil {
-		return response.ErrorObject{
-			Code:    http.StatusBadRequest,
-			Message: "university already exist",
-			Err:     err,
-		}
+		return response.NewError(http.StatusBadRequest, "university already exist", errors.New("can not make same unviersity"))
 	}
 
 	newUniversity := domain.Universities{
@@ -36,11 +33,7 @@ func (u *UniversityUsecase) CreateUniversity(universityRequest domain.Universiti
 
 	err = u.universityRepository.CreateUniversity(&newUniversity)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when creating university",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "an error occured when creating university", err)
 	}
 
 	return nil

@@ -15,38 +15,36 @@ func (r *Rest) CreateInformation(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&informationRequest)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 	}
 
-	errorObject := r.usecase.InformationUsecase.CreateInformation(informationRequest)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.InformationUsecase.CreateInformation(informationRequest)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success create information")
+	response.Success(c, "success create information", nil)
 }
 
 func (r *Rest) UpdateInformation(c *gin.Context) {
 	informationIdString := c.Param("informationId")
 	informationId, err := strconv.Atoi(informationIdString)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to parsing mentor id", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing mentor id", err))
 		return
 	}
 
 	var informationUpdate domain.InformationUpdate
 	err = c.ShouldBindJSON(&informationUpdate)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	information, errorObject := r.usecase.InformationUsecase.UpdateInformation(informationId, informationUpdate)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	information, err := r.usecase.InformationUsecase.UpdateInformation(informationId, informationUpdate)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
@@ -54,24 +52,23 @@ func (r *Rest) UpdateInformation(c *gin.Context) {
 	response.Success(c, "success update information", information)
 }
 
-func (r *Rest) UploadInformationPhoto (c *gin.Context) {
+func (r *Rest) UploadInformationPhoto(c *gin.Context) {
 	informationIdString := c.Param("informationId")
 	informationId, err := strconv.Atoi(informationIdString)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to parsing mentor id", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing mentor id", err))
 		return
 	}
 
 	informationPhoto, err := c.FormFile("information_photo")
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind request", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	information, errorObject := r.usecase.InformationUsecase.UploadInformationPhoto(informationId, informationPhoto)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	information, err := r.usecase.InformationUsecase.UploadInformationPhoto(informationId, informationPhoto)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 

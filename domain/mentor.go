@@ -18,7 +18,7 @@ type Mentors struct {
 	UpdatedAt     time.Time      `json:"-"`
 	Transactions  []Transactions `json:"-" gorm:"foreignKey:mentor_id;references:id"`
 	Experiences   []Experiences  `json:"-" gorm:"foreignKey:mentor_id;references:id"`
-	Users         []Users        `json:"-" gorm:"many2many:has_mentors;foreignKey:id;joinForeignKey:mentor_id;references:id;joinReferences:user_id"`
+	Users         []Users        `json:"-" gorm:"merror2merror:has_mentors;foreignKey:id;joinForeignKey:mentor_id;references:id;joinReferences:user_id"`
 }
 
 type MentorRequest struct {
@@ -29,9 +29,10 @@ type MentorRequest struct {
 }
 
 type MentorUpdate struct {
-	CurrentJob  string `json:"current_job" binding:"required"`
-	Description string `json:"description"`
-	Price       uint64 `json:"price"`
+	CurrentJob    string `json:"current_job"`
+	Description   string `json:"description"`
+	Price         uint64 `json:"price"`
+	MentorPicture string `json:"-"`
 }
 
 type UploadMentorPicture struct {

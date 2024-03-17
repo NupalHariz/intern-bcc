@@ -10,5 +10,5 @@ type Experiences struct {
 }
 
 type ExperienceRequest struct {
-	Experience string `json:"experience"`
+	Experience string `json:"experience" binding:"required"`
 }

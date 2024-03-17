@@ -12,15 +12,14 @@ func (r *Rest) CreateProvince(c *gin.Context) {
 	var provinceRequest domain.Province
 	err := c.ShouldBindJSON(&provinceRequest)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 	}
 
-	errorObject := r.usecase.ProvinceUsecase.CreateProvince(provinceRequest)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.ProvinceUsecase.CreateProvince(provinceRequest)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success create province")
+	response.Success(c, "success create province", nil)
 }

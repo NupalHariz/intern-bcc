@@ -17,14 +17,14 @@ type Products struct {
 	ProductPhoto string    `json:"product_photo"`
 	CreatedAt    time.Time `json:"-"`
 	UpdatedAt    time.Time `json:"-"`
-	LikeByUser   []Users   `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:product_id;references:id;joinReferences:user_id"`
+	LikeByUser   []Users   `json:"-" gorm:"merror2merror:user_like_product;foreignKey:id;joinForeignKey:product_id;references:id;joinReferences:user_id"`
 }
 
 type ProductParam struct {
-	Id         int    `json:"-"`
-	MerchantId int    `json:"-"`
-	CategoryId int    `json:"-"`
-	Name       string `json:"-"`
+	Id         uuid.UUID `json:"-"`
+	MerchantId int       `json:"-"`
+	CategoryId int       `json:"-"`
+	Name       string    `json:"-"`
 }
 
 type ProductRequest struct {
@@ -35,9 +35,10 @@ type ProductRequest struct {
 }
 
 type ProductUpdate struct {
-	Name        string `json:"name"`
-	Price       uint   `json:"price"`
-	Description string `json:"description"`
+	Name         string `json:"name"`
+	Price        uint   `json:"price"`
+	Description  string `json:"description"`
+	ProductPhoto string `json:"-"`
 }
 
 type UploadProductPhoto struct {

@@ -8,5 +8,5 @@ type Categories struct {
 }
 
 type CategoryRequest struct {
-	Category string `json:"category"`
+	Category string `json:"category" binding:"required"`
 }

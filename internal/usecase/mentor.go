@@ -16,9 +16,9 @@ import (
 )
 
 type IMentorUsecase interface {
-	CreateMentor(mentorRequest domain.MentorRequest) any
-	UpdateMentor(mentorId uuid.UUID, mentorUpdate domain.MentorUpdate) (domain.Mentors, any)
-	UploadMentorPhoto(mentorId uuid.UUID, mentorPicture *multipart.FileHeader) (domain.Mentors, any)
+	CreateMentor(mentorRequest domain.MentorRequest) error
+	UpdateMentor(mentorId uuid.UUID, mentorUpdate domain.MentorUpdate) (domain.Mentors, error)
+	UploadMentorPhoto(mentorId uuid.UUID, mentorPicture *multipart.FileHeader) (domain.Mentors, error)
 }
 
 type MentorUsecase struct {
@@ -35,7 +35,7 @@ func NewMentorUsecase(mentorRepository repository.IMentorRepository, jwt jwt.IJw
 	}
 }
 
-func (u *MentorUsecase) CreateMentor(mentorRequest domain.MentorRequest) any {
+func (u *MentorUsecase) CreateMentor(mentorRequest domain.MentorRequest) error {
 	newMentor := domain.Mentors{
 		Id:          uuid.New(),
 		Name:        mentorRequest.Name,
@@ -46,94 +46,65 @@ func (u *MentorUsecase) CreateMentor(mentorRequest domain.MentorRequest) any {
 
 	err := u.mentorRepository.CreateMentor(&newMentor)
 	if err != nil {
-		return response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when creating mentor",
-			Err:     err,
-		}
+		return response.NewError(http.StatusInternalServerError, "an error occured when create mentor", err)
 	}
 
 	return nil
 }
 
-func (u *MentorUsecase) UpdateMentor(mentorId uuid.UUID, mentorUpdate domain.MentorUpdate) (domain.Mentors, any) {
+func (u *MentorUsecase) UpdateMentor(mentorId uuid.UUID, mentorUpdate domain.MentorUpdate) (domain.Mentors, error) {
 	var mentor domain.Mentors
 	err := u.mentorRepository.GetMentor(&mentor, domain.Mentors{Id: mentorId})
 	if err != nil {
-		return domain.Mentors{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get mentor",
-			Err:     err,
-		}
+		return domain.Mentors{}, response.NewError(http.StatusNotFound, "an error occured when get mentor", err)
 	}
 
-	if mentorUpdate.CurrentJob != "" {
-		mentor.CurrentJob = mentorUpdate.CurrentJob
-	}
-	if mentorUpdate.Description != "" {
-		mentor.Description = mentorUpdate.Description
-	}
-	if mentorUpdate.Price != 0 {
-		mentor.Price = mentorUpdate.Price
-	}
-
-	err = u.mentorRepository.UpdateMentor(&mentor)
+	err = u.mentorRepository.UpdateMentor(&mentorUpdate, mentor.Id)
 	if err != nil {
-		return domain.Mentors{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when update mentor",
-			Err:     err,
-		}
+		return domain.Mentors{}, response.NewError(http.StatusInternalServerError, "an error occured when update mentor", err)
 	}
 
-	return mentor, nil
+	var updatedMentor domain.Mentors
+	err = u.mentorRepository.GetMentor(&updatedMentor, domain.Mentors{Id: mentor.Id})
+	if err != nil {
+		return domain.Mentors{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated mentor", err)
+	}
+
+	return updatedMentor, nil
 }
 
-func (u *MentorUsecase) UploadMentorPhoto(mentorId uuid.UUID, mentorPicture *multipart.FileHeader) (domain.Mentors, any) {
+func (u *MentorUsecase) UploadMentorPhoto(mentorId uuid.UUID, mentorPicture *multipart.FileHeader) (domain.Mentors, error) {
 	var mentor domain.Mentors
 	err := u.mentorRepository.GetMentor(&mentor, domain.Mentors{Id: mentorId})
 	if err != nil {
-		return domain.Mentors{}, response.ErrorObject{
-			Code:    http.StatusNotFound,
-			Message: "failed to get mentor",
-			Err:     err,
-		}
+		return domain.Mentors{}, response.NewError(http.StatusNotFound, "an error occured when get mentor", err)
 	}
 
 	if mentor.MentorPicture != "" {
 		err = u.supabase.Delete(mentor.MentorPicture)
 		if err != nil {
-			return domain.Mentors{}, response.ErrorObject{
-				Code:    http.StatusInternalServerError,
-				Message: "error occured when deleting old mentor picture",
-				Err:     err,
-			}
+			return domain.Mentors{}, response.NewError(http.StatusInternalServerError, "an error occured when delete old mentor picture", err)
 		}
 	}
 
 	mentorPicture.Filename = fmt.Sprintf("%v-%v", time.Now().String(), mentorPicture.Filename)
-	if strings.Contains(mentorPicture.Filename, " ") {
-		mentorPicture.Filename = strings.Replace(mentorPicture.Filename, " ", "-", -1)
-	}
+	mentorPicture.Filename = strings.Replace(mentorPicture.Filename, " ", "-", -1)
 
 	newMentorPicture, err := u.supabase.Upload(mentorPicture)
 	if err != nil {
-		return domain.Mentors{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "failed to upload photo",
-			Err:     err,
-		}
+		return domain.Mentors{}, response.NewError(http.StatusInternalServerError, "an error occured when upload photo", err)
 	}
 
-	mentor.MentorPicture = newMentorPicture
-	err = u.mentorRepository.UpdateMentor(&mentor)
+	err = u.mentorRepository.UpdateMentor(&domain.MentorUpdate{MentorPicture: newMentorPicture}, mentor.Id)
 	if err != nil {
-		return domain.Mentors{}, response.ErrorObject{
-			Code:    http.StatusInternalServerError,
-			Message: "an error occured when update mentor",
-			Err:     err,
-		}
+		return domain.Mentors{}, response.NewError(http.StatusInternalServerError, "an error occured when update mentor", err)
 	}
 
-	return mentor, nil
+	var updatedMentor domain.Mentors
+	err = u.mentorRepository.GetMentor(&updatedMentor, domain.Mentors{Id: mentor.Id})
+	if err != nil {
+		return domain.Mentors{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated mentor", err)
+	}
+
+	return updatedMentor, nil
 }

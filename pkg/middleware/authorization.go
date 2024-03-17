@@ -11,11 +11,11 @@ import (
 func (m *Middleware) OnlyAdmin(c *gin.Context) {
 	user, err := m.jwtAuth.GetLoginUser(c)
 	if err != nil {
-		response.Failed(c, http.StatusNotFound, "failed to get account", err)
+		response.Failed(c, response.NewError(http.StatusNotFound, "failed to get account", err))
 		c.Abort()
 	}
 	if !user.IsAdmin {
-		response.Failed(c, http.StatusUnauthorized, "access denied", errors.New("only admin"))
+		response.Failed(c, response.NewError(http.StatusUnauthorized, "access denied", errors.New("only admin")))
 	}
 
 	c.Next()

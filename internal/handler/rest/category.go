@@ -13,16 +13,15 @@ func (r *Rest) CreateCategory(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&category)
 	if err != nil {
-		response.Failed(c, http.StatusBadRequest, "failed to bind json", err)
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	errorObject := r.usecase.CategoryUsecase.CreateCategory(category)
-	if errorObject != nil {
-		errorObject := errorObject.(response.ErrorObject)
-		response.Failed(c, errorObject.Code, errorObject.Message, errorObject.Err)
+	err = r.usecase.CategoryUsecase.CreateCategory(category)
+	if err != nil {
+		response.Failed(c, err)
 		return
 	}
 
-	response.SuccessWithoutData(c, "success create category")
+	response.Success(c, "success create category", nil)
 }
