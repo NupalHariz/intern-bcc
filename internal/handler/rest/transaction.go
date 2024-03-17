@@ -4,14 +4,14 @@ import (
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (r *Rest) CreateTransaction(c *gin.Context) {
 	mentorIdString := c.Param("mentorId")
-	mentorId, _ := strconv.Atoi(mentorIdString)
+	mentorId, _ := uuid.Parse(mentorIdString)
 
 	var transactionRequest domain.TransactionRequest
 

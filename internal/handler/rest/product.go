@@ -73,3 +73,20 @@ func (r *Rest) UploadProductPhoto(c *gin.Context) {
 
 	response.Success(c, "success upload product product", product)
 }
+
+func (r *Rest) GetProducts(c *gin.Context) {
+	var productParam domain.ProductParam
+	err := c.ShouldBind(&productParam)
+	if err != nil {
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
+	}
+
+	products, err := r.usecase.ProductUsecase.GetProducts(productParam)
+	if err != nil {
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "success get product data", products)
+}

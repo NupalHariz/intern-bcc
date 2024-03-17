@@ -8,20 +8,21 @@ import (
 )
 
 type Merchants struct {
-	Id            uuid.UUID  `json:"id"`
-	UserId        uuid.UUID  `json:"user_id" gorm:"type:varchar(36);unique"`
-	MerchantName  string     `json:"store_name"`
-	UniversityId  int        `json:"-"`
-	Faculty       string     `json:"faculty"`
-	ProvinceId    int        `json:"-"`
-	City          string     `json:"city"`
-	PhoneNumber   string     `json:"phone_number"`
-	Instagram     string     `json:"instagram"`
-	MerchantPhoto string     `json:"merchant_photo"`
-	IsActive      bool       `json:"-"`
-	CreatedAt     time.Time  `json:"-"`
-	UpdatedAt     time.Time  `json:"-"`
-	Products      []Products `json:"-" gorm:"foreignKey:merchant_id;references:id"`
+	Id            uuid.UUID    `json:"id" gorm:"type:varchar(36);unique"`
+	UserId        uuid.UUID    `json:"user_id" gorm:"type:varchar(36);unique"`
+	MerchantName  string       `json:"store_name"`
+	UniversityId  int          `json:"-"`
+	Faculty       string       `json:"faculty"`
+	ProvinceId    int          `json:"-"`
+	City          string       `json:"city"`
+	PhoneNumber   string       `json:"phone_number"`
+	Instagram     string       `json:"instagram"`
+	MerchantPhoto string       `json:"merchant_photo"`
+	IsActive      bool         `json:"-"`
+	CreatedAt     time.Time    `json:"-"`
+	UpdatedAt     time.Time    `json:"-"`
+	Products      []Products   `json:"-" gorm:"foreignKey:merchant_id;references:id"`
+	University    Universities `json:"university"`
 }
 
 type MerchantRequest struct {
@@ -36,12 +37,8 @@ type MerchantRequest struct {
 
 type MerchantParam struct {
 	Id           uuid.UUID `json:"id"`
-	UserId       uuid.UUID `json:"user_id" gorm:"type:varchar(36);unique"`
+	UserId       uuid.UUID `json:"user_id"`
 	MerchantName string    `json:"store_name"`
-	University   string    `json:"university" binding:"required"`
-	Faculty      string    `json:"faculty" binding:"required"`
-	Province     string    `json:"province" binding:"required"`
-	City         string    `json:"city" binding:"required"`
 }
 
 type MerchantVerify struct {

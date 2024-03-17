@@ -18,10 +18,10 @@ type Users struct {
 	ProfilePicture string         `json:"profile_picture"`
 	CreatedAt      time.Time      `json:"-"`
 	UpdatedAt      time.Time      `json:"-"`
-	Merchant       Merchants      `json:"-"  gorm:"foreignKey:user_id;references:id"`
+	Merchant       Merchants      `json:"-" gorm:"foreignKey:user_id;references:id"`
 	Transactions   []Transactions `json:"-" gorm:"foreignKey:user_id;references:id"`
-	LikeProduct    []Products     `json:"-" gorm:"merror2merror:user_like_product;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:product_id"`
-	HasMentors     []Mentors      `json:"-" gorm:"merror2merror:has_mentors;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:mentor_id"`
+	LikeProduct    []Products     `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:product_id"`
+	HasMentors     []Mentors      `json:"-" gorm:"many2many:has_mentors;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:mentor_id"`
 }
 
 type UserRequest struct {

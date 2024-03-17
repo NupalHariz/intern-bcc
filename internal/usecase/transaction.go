@@ -16,7 +16,7 @@ import (
 )
 
 type ITransactionUsecase interface {
-	CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, error)
+	CreateTransaction(c *gin.Context, mentorId uuid.UUID, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, error)
 	VerifyTransaction(payload map[string]interface{}) error
 }
 
@@ -36,7 +36,7 @@ func NewTransactionUsecase(transactionRepository repository.ITransactionReposito
 	}
 }
 
-func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId int, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, error) {
+func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId uuid.UUID, transactionRequest domain.TransactionRequest) (domain.TransactionResponse, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
 		return domain.TransactionResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
@@ -78,13 +78,12 @@ func generateTransactionResponse(transactionRequest domain.TransactionRequest, c
 		PaymentType:   transactionRequest.PaymentType,
 	}
 
-	switch transactionRequest.PaymentType {
-	case "gopay":
+	if transactionRequest.PaymentType == "gopay" {
 		transactionResponse.URL = coreApiRes.Actions[0].URL
-	case "mandiri":
+	} else if transactionRequest.PaymentType == "mandiri" {
 		transactionResponse.BillKey = coreApiRes.BillKey
 		transactionResponse.BillerCode = coreApiRes.BillerCode
-	default:
+	} else if transactionRequest.PaymentType == "bca" || transactionRequest.PaymentType == "bri" || transactionRequest.PaymentType == "bni" {
 		transactionResponse.VaNumber = coreApiRes.VaNumbers[0].VANumber
 	}
 

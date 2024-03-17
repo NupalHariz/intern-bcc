@@ -8,7 +8,7 @@ import (
 )
 
 type Mentors struct {
-	Id            uuid.UUID      `json:"-"`
+	Id            uuid.UUID      `json:"-" gorm:"type:varchar(36);primary key"`
 	Name          string         `json:"name" gorm:"unique"`
 	CurrentJob    string         `json:"current_job"`
 	Description   string         `json:"description"`
@@ -18,7 +18,7 @@ type Mentors struct {
 	UpdatedAt     time.Time      `json:"-"`
 	Transactions  []Transactions `json:"-" gorm:"foreignKey:mentor_id;references:id"`
 	Experiences   []Experiences  `json:"-" gorm:"foreignKey:mentor_id;references:id"`
-	Users         []Users        `json:"-" gorm:"merror2merror:has_mentors;foreignKey:id;joinForeignKey:mentor_id;references:id;joinReferences:user_id"`
+	Users         []Users        `json:"-" gorm:"many2many:has_mentors;foreignKey:id;joinForeignKey:mentor_id;references:id;joinReferences:user_id"`
 }
 
 type MentorRequest struct {
@@ -41,5 +41,5 @@ type UploadMentorPicture struct {
 
 type HasMentor struct {
 	UserId   uuid.UUID `json:"-"`
-	MentorId int       `json:"-"`
+	MentorId uuid.UUID `json:"-"`
 }

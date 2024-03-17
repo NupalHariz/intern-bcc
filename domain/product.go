@@ -8,8 +8,8 @@ import (
 )
 
 type Products struct {
-	Id           uuid.UUID `json:"-"`
-	MerchantId   uuid.UUID `json:"-"`
+	Id           uuid.UUID `json:"-" gorm:"type:varchar(36);primary key"`
+	MerchantId   uuid.UUID `json:"-" gorm:"type:varchar(36)"`
 	CategoryId   int       `json:"-"`
 	Name         string    `json:"name"`
 	Price        uint      `json:"price"`
@@ -17,14 +17,19 @@ type Products struct {
 	ProductPhoto string    `json:"product_photo"`
 	CreatedAt    time.Time `json:"-"`
 	UpdatedAt    time.Time `json:"-"`
-	LikeByUser   []Users   `json:"-" gorm:"merror2merror:user_like_product;foreignKey:id;joinForeignKey:product_id;references:id;joinReferences:user_id"`
+	LikeByUser   []Users   `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:product_id;references:id;joinReferences:user_id"`
+	Merchant     Merchants `json:"merchant"`
 }
 
 type ProductParam struct {
-	Id         uuid.UUID `json:"-"`
-	MerchantId int       `json:"-"`
-	CategoryId int       `json:"-"`
-	Name       string    `json:"-"`
+	Id           uuid.UUID `json:"-"`
+	MerchantId   int       `json:"-"`
+	CategoryId   int       `json:"-" form:"categoryId"`
+	Name         string    `json:"-" form:"name"`
+	ProvinceId   int       `json:"-" form:"province"`
+	UniversityId int       `json:"-" form:"university"`
+	Page         int       `json:"-" form:"page"`
+	Offset       int       `json:"-"`
 }
 
 type ProductRequest struct {
@@ -43,4 +48,13 @@ type ProductUpdate struct {
 
 type UploadProductPhoto struct {
 	ProductPhoto *multipart.FileHeader `json:"product_photo"`
+}
+
+type ProductResponse struct {
+	Id           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	MerchantName string    `json:"merchant_name"`
+	University   string    `json:"university"`
+	Price        uint      `json:"price"`
+	ProductPhoto string    `json:"product_photo"`
 }

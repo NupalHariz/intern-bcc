@@ -56,6 +56,7 @@ func (r *Rest) MountEndpoint() {
 
 	//Product Endpoint
 	product := routerGroup.Group("/product")
+	product.GET("/", r.GetProducts)
 	product.POST("/", r.middleware.Authentication, r.CreateProduct)
 	product.PATCH("/:productId", r.middleware.Authentication, r.UpdateProduct)
 	product.PATCH("/:productId/product-photo", r.middleware.Authentication, r.UploadProductPhoto)

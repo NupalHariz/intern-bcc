@@ -8,6 +8,7 @@ import (
 	"intern-bcc/pkg/jwt"
 	"intern-bcc/pkg/response"
 	"intern-bcc/pkg/supabase"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -18,6 +19,7 @@ import (
 )
 
 type IProductUsecase interface {
+	GetProducts(productParam domain.ProductParam) ([]domain.ProductResponse, error)
 	CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error
 	UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.Products, error)
 	UploadProductPhoto(c *gin.Context, productId uuid.UUID, productPhoto *multipart.FileHeader) (domain.Products, error)
@@ -27,8 +29,8 @@ type ProductUsecase struct {
 	productRepository  repository.IProductRepository
 	merchantRepository repository.IMerchantRepository
 	categoryRepository repository.ICategoryRepository
-	jwt                jwt.IJwt
-	supabase           supabase.ISupabase
+	jwt      jwt.IJwt
+	supabase supabase.ISupabase
 }
 
 func NewProductUsecase(productRepository repository.IProductRepository, jwt jwt.IJwt,
@@ -41,6 +43,49 @@ func NewProductUsecase(productRepository repository.IProductRepository, jwt jwt.
 		categoryRepository: categoryRepository,
 		supabase:           supabase,
 	}
+}
+
+func (u *ProductUsecase) GetProducts(productParam domain.ProductParam) ([]domain.ProductResponse, error) {
+	if productParam.Page <= 0 {
+		productParam.Page = 1
+	}
+
+	offSet := (productParam.Page - 1) * 6
+	productParam.Offset = offSet
+
+	var totalProduct int64
+	err := u.productRepository.GetTotalProduct(&totalProduct)
+	if err != nil {
+		return []domain.ProductResponse{}, response.NewError(http.StatusInternalServerError, "failed to get total product", err)
+	}
+
+	totalPage := (int)(math.Ceil(float64(totalProduct) / 6))
+	if productParam.Page > totalPage{
+		return []domain.ProductResponse{}, response.NewError(http.StatusBadRequest, "can not find page", errors.New("request page bigger than maximum page"))
+	}
+
+	var products []domain.Products
+	fmt.Println(productParam)
+	err = u.productRepository.GetProducts(&products, productParam)
+	if err != nil {
+		return []domain.ProductResponse{}, response.NewError(http.StatusInternalServerError, "failed", err)
+	}
+
+	var productResponses []domain.ProductResponse
+	for _, p := range products {
+		productResponse := domain.ProductResponse{
+			Id:           p.Id,
+			Name:         p.Name,
+			MerchantName: p.Merchant.MerchantName,
+			University:   p.Merchant.University.University,
+			Price:        p.Price,
+			ProductPhoto: p.ProductPhoto,
+		}
+
+		productResponses = append(productResponses, productResponse)
+	}
+
+	return productResponses, nil
 }
 
 func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error {

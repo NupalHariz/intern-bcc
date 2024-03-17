@@ -9,7 +9,7 @@ import (
 type Transactions struct {
 	Id          uuid.UUID `json:"-" gorm:"primary key"`
 	UserId      uuid.UUID `json:"-"`
-	MentorId    int       `json:"-"`
+	MentorId    uuid.UUID `json:"-"`
 	Price       uint64    `json:"-"`
 	IsPayed     bool      `json:"-"`
 	PaymentType string    `json:"-"`
