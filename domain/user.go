@@ -7,7 +7,7 @@ import (
 )
 
 type Users struct {
-	Id             uuid.UUID      `json:"-" gorm:"type:varchar(36);primary key"`
+	Id             uuid.UUID      `json:"id" gorm:"type:varchar(36);primary key"`
 	Name           string         `json:"name" gorm:"unique"`
 	Email          string         `json:"email" gorm:"unique"`
 	Password       string         `json:"-"`
@@ -20,7 +20,7 @@ type Users struct {
 	UpdatedAt      time.Time      `json:"-"`
 	Merchant       Merchants      `json:"-" gorm:"foreignKey:user_id;references:id"`
 	Transactions   []Transactions `json:"-" gorm:"foreignKey:user_id;references:id"`
-	LikeProduct    []Products     `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:product_id"`
+	LikeProduct    []Products     `json:"like_product" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:product_id"`
 	HasMentors     []Mentors      `json:"-" gorm:"many2many:has_mentors;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:mentor_id"`
 }
 

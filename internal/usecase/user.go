@@ -24,6 +24,9 @@ import (
 
 type IUserUsecase interface {
 	GetUser(param domain.UserParam) (domain.Users, error)
+	GetLikeProducts(c *gin.Context) ([]domain.ProductResponses, error)
+	GetOwnProducts(c *gin.Context) ([]domain.ProductResponses, error)
+	GetOwnMentors(c *gin.Context) ([]domain.OwnMentorResponses, error)
 	Register(userRequest domain.UserRequest) error
 	Login(userLogin domain.UserLogin) (domain.LoginResponse, error)
 	UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.Users, error)
@@ -63,6 +66,88 @@ func (u *UserUsecase) GetUser(param domain.UserParam) (domain.Users, error) {
 	}
 
 	return user, nil
+}
+
+func (u *UserUsecase) GetLikeProducts(c *gin.Context) ([]domain.ProductResponses, error) {
+	user, err := u.jwt.GetLoginUser(c)
+	if err != nil {
+		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get login user", err)
+	}
+
+	err = u.userRepository.GetLikeProducts(&user, user.Id)
+	if err != nil {
+		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get liked product", err)
+	}
+
+	var productResponses []domain.ProductResponses
+	for _, lk := range user.LikeProduct {
+		productResponse := domain.ProductResponses{
+			Id:           lk.Id,
+			Name:         lk.Name,
+			MerchantName: lk.Merchant.MerchantName,
+			University:   lk.Merchant.University.University,
+			Price:        lk.Price,
+			ProductPhoto: lk.ProductPhoto,
+		}
+
+		productResponses = append(productResponses, productResponse)
+	}
+
+	return productResponses, nil
+}
+
+func (u *UserUsecase) GetOwnProducts(c *gin.Context) ([]domain.ProductResponses, error) {
+	user, err := u.jwt.GetLoginUser(c)
+	if err != nil {
+		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "failed to get login user", err)
+	}
+
+	err = u.userRepository.GetOwnProducts(&user, user.Id)
+	if err != nil {
+		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get own product", err)
+	}
+
+	var productResponses []domain.ProductResponses
+	for _, p := range user.Merchant.Products {
+		productResponse := domain.ProductResponses{
+			Id:           p.Id,
+			Name:         p.Name,
+			MerchantName: user.Merchant.MerchantName,
+			University:   user.Merchant.University.University,
+			Price:        p.Price,
+			ProductPhoto: p.ProductPhoto,
+		}
+
+		productResponses = append(productResponses, productResponse)
+	}
+
+	return productResponses, nil
+}
+
+func (u *UserUsecase) GetOwnMentors(c *gin.Context) ([]domain.OwnMentorResponses, error) {
+	user, err := u.jwt.GetLoginUser(c)
+	if err != nil {
+		return []domain.OwnMentorResponses{}, response.NewError(http.StatusInternalServerError, "failed to get login user", err)
+	}
+
+	err = u.userRepository.GetOwnMentors(&user, user.Id)
+	if err != nil {
+		return []domain.OwnMentorResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get own mentors", err)
+	}
+
+	var ownMentorResponses []domain.OwnMentorResponses
+	for _, m := range user.HasMentors {
+		ownMentorResponse := domain.OwnMentorResponses{
+			Id:            m.Id,
+			Name:          m.Name,
+			CurrentJob:    m.CurrentJob,
+			MentorPicture: m.MentorPicture,
+		}
+
+		ownMentorResponses = append(ownMentorResponses, ownMentorResponse)
+	}
+
+	return ownMentorResponses, nil
 }
 
 func (u *UserUsecase) Register(userRequest domain.UserRequest) error {

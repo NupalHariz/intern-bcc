@@ -8,17 +8,24 @@ import (
 )
 
 type Products struct {
-	Id           uuid.UUID `json:"-" gorm:"type:varchar(36);primary key"`
-	MerchantId   uuid.UUID `json:"-" gorm:"type:varchar(36)"`
-	CategoryId   int       `json:"-"`
-	Name         string    `json:"name"`
-	Price        uint      `json:"price"`
-	Description  string    `json:"description"`
-	ProductPhoto string    `json:"product_photo"`
-	CreatedAt    time.Time `json:"-"`
-	UpdatedAt    time.Time `json:"-"`
-	LikeByUser   []Users   `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:product_id;references:id;joinReferences:user_id"`
-	Merchant     Merchants `json:"merchant"`
+	Id           uuid.UUID  `json:"id" gorm:"type:varchar(36);primary key"`
+	MerchantId   uuid.UUID  `json:"-" gorm:"type:varchar(36)"`
+	CategoryId   int        `json:"-"`
+	Name         string     `json:"name"`
+	Price        uint       `json:"price"`
+	Description  string     `json:"description"`
+	ProductPhoto string     `json:"product_photo"`
+	CreatedAt    time.Time  `json:"-"`
+	UpdatedAt    time.Time  `json:"-"`
+	LikeByUser   []Users    `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:product_id;references:id;joinReferences:user_id"`
+	Merchant     Merchants  `json:"-"`
+	Category     Categories `json:"category"`
+}
+
+type UserLikeProduct struct {
+	UserId    uuid.UUID `json:"-"`
+	ProductId uuid.UUID `json:"-"`
+	Product   Products  `json:"-"`
 }
 
 type ProductParam struct {
@@ -72,4 +79,13 @@ type ProductResponse struct {
 	ProductPhoto string    `json:"product_photo"`
 	WhatsApp     string    `json:"whatsapp"`
 	Instagram    string    `json:"instagram"`
+}
+
+type ProductProfileResponse struct {
+	Id           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	Category     string    `json:"category"`
+	Price        uint      `json:"price"`
+	ProductPhoto string    `json:"product_photo"`
 }

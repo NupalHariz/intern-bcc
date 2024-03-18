@@ -37,6 +37,15 @@ func (r *Rest) MountEndpoint() {
 	user.PATCH("/:userId", r.middleware.Authentication, r.UpdateUser)
 	user.PATCH("/:userId/upload-photo", r.middleware.Authentication, r.UploadUserPhoto)
 
+	//Profile Endpoint
+	profile := routerGroup.Group("/profile")
+	profile.GET("/:userId", r.middleware.Authentication, r.GetUser)
+	profile.GET("/favourite", r.middleware.Authentication, r.GetLikeProduct)
+	profile.GET("/merchant", r.middleware.Authentication, r.GetMerchant)
+	profile.GET("/product", r.middleware.Authentication, r.GetOwnProducts)
+	profile.GET("/product/:productId", r.middleware.Authentication, r.GetOwnProduct)
+	profile.GET("/mentor", r.middleware.Authentication, r.GetOwnMentors)
+
 	//Merchant Endpoint
 	merchant := routerGroup.Group("/merchant")
 	merchant.POST("/", r.middleware.Authentication, r.CreateMerchant)
@@ -65,7 +74,6 @@ func (r *Rest) MountEndpoint() {
 	product.PATCH("/:productId/product-photo", r.middleware.Authentication, r.UploadProductPhoto)
 	product.POST("/:productId", r.middleware.Authentication, r.LikeProduct)
 	product.DELETE("/:productId", r.middleware.Authentication, r.DeleteLikeProduct)
-
 
 	//Information Endpoint
 	information := routerGroup.Group("/information")

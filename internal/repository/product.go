@@ -24,7 +24,7 @@ func NewProductRepository(db *gorm.DB) IProductRepository {
 }
 
 func (r *ProductRepository) GetProducts(product *[]domain.Products, productParam domain.ProductParam) error {
-	err := r.db.Debug().Limit(6).Offset(productParam.Offset).Preload("Merchant.University").Find(&product, productParam).Error
+	err := r.db.Debug().Limit(6).Offset(productParam.Offset).Preload("Merchant.University").Find(product, productParam).Error
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (r *ProductRepository) GetProducts(product *[]domain.Products, productParam
 }
 
 func (r *ProductRepository) GetProduct(product *domain.Products, productParam domain.ProductParam) error {
-	err := r.db.Preload("Merchant.University").Preload("Merchant.Province").First(product, productParam).Error
+	err := r.db.Preload("Category").Preload("Merchant.University").Preload("Merchant.Province").First(product, productParam).Error
 	if err != nil {
 		return err
 	}

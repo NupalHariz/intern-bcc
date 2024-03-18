@@ -11,6 +11,9 @@ import (
 type IUserRepository interface {
 	GetUser(user *domain.Users, param domain.UserParam) error
 	GetLikeProduct(likedProduct *domain.LikeProduct, likeProductParam domain.LikeProduct) error
+	GetLikeProducts(user *domain.Users, userId uuid.UUID) error
+	GetOwnProducts(user *domain.Users, userId uuid.UUID) error
+	GetOwnMentors(user *domain.Users, userId uuid.UUID) error
 	Register(newUser *domain.Users) error
 	UpdateUser(userUpdate *domain.UserUpdate, userId uuid.UUID) error
 	LikeProduct(likeProduct *domain.LikeProduct) error
@@ -37,6 +40,33 @@ func (r *UserRepository) GetUser(user *domain.Users, param domain.UserParam) err
 
 func (r *UserRepository) GetLikeProduct(likedProduct *domain.LikeProduct, likeProductParam domain.LikeProduct) error {
 	err := r.db.Table("user_like_product").First(likedProduct, likeProductParam).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserRepository) GetLikeProducts(user *domain.Users, userId uuid.UUID) error {
+	err := r.db.Debug().Model(domain.Users{}).Preload("LikeProduct.Merchant.University").Find(user, "id = ?", userId).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserRepository) GetOwnProducts(user *domain.Users, userId uuid.UUID) error {
+	err := r.db.Debug().Preload("Merchant.University").Preload("Merchant.Products").Find(user, "id = ?", userId).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserRepository) GetOwnMentors(user *domain.Users, userId uuid.UUID) error {
+	err := r.db.Preload("HasMentors").Find(user, "id = ?", userId).Error
 	if err != nil {
 		return err
 	}

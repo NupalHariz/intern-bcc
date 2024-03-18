@@ -22,11 +22,12 @@ import (
 )
 
 type IMerchantUsecase interface {
+	GetMerchant(c *gin.Context) (domain.MerchantProfileResponse, error)
 	CreateMerchant(c *gin.Context, merchantRequest domain.MerchantRequest) error
 	SendOtp(c *gin.Context, ctx context.Context) error
 	VerifyOtp(c *gin.Context, ctx context.Context, verifyOtp domain.MerchantVerify) error
-	UpdateMerchant(c *gin.Context, merchantId uuid.UUID, updateMerchant domain.UpdateMerchant) (domain.Merchants, error)
-	UploadMerchantPhoto(c *gin.Context, merchantId uuid.UUID, merchantPhoto *multipart.FileHeader) (domain.Merchants, error)
+	UpdateMerchant(c *gin.Context, merchantId uuid.UUID, updateMerchant domain.UpdateMerchant) (domain.MerchantProfileResponse, error)
+	UploadMerchantPhoto(c *gin.Context, merchantId uuid.UUID, merchantPhoto *multipart.FileHeader) (domain.MerchantProfileResponse, error)
 }
 
 type MerchantUsecase struct {
@@ -51,6 +52,33 @@ func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, redis
 		goMail:               goMail,
 		supabase:             supabase,
 	}
+}
+
+func (u *MerchantUsecase) GetMerchant(c *gin.Context) (domain.MerchantProfileResponse, error) {
+	user, err := u.jwt.GetLoginUser(c)
+	if err != nil {
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
+	}
+
+	var merchant domain.Merchants
+	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
+	if err != nil {
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get merchant", err)
+	}
+
+	merchantResponse := domain.MerchantProfileResponse{
+		Id: merchant.Id,
+		MerchantName: merchant.MerchantName,
+		Province: merchant.Province.Province,
+		City: merchant.City,
+		University: merchant.University.University,
+		Faculty: merchant.Faculty,
+		PhoneNumber: merchant.PhoneNumber,
+		Instagram: merchant.Instagram,
+		MerchantPhoto: merchant.MerchantPhoto,
+	}
+
+	return merchantResponse, nil
 }
 
 func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.MerchantRequest) error {
@@ -180,56 +208,68 @@ func (u *MerchantUsecase) VerifyOtp(c *gin.Context, ctx context.Context, verifyO
 	return nil
 }
 
-func (u *MerchantUsecase) UpdateMerchant(c *gin.Context, merchantId uuid.UUID, updateMerchant domain.UpdateMerchant) (domain.Merchants, error) {
+func (u *MerchantUsecase) UpdateMerchant(c *gin.Context, merchantId uuid.UUID, updateMerchant domain.UpdateMerchant) (domain.MerchantProfileResponse, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{Id: merchantId})
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusNotFound, "an error occured when get merchant", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get merchant", err)
 	}
 
 	if user.Id != merchant.UserId {
-		return domain.Merchants{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
 	}
 
 	err = u.merchantRepository.UpdateMerchant(&updateMerchant, merchant.Id)
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusInternalServerError, "an error occured when update merchant", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when update merchant", err)
 	}
 
 	var updatedMerchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&updatedMerchant, domain.MerchantParam{Id: merchant.Id})
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated merchant", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated merchant", err)
 	}
 
-	return updatedMerchant, nil
+	updatedMerchantResponse := domain.MerchantProfileResponse {
+		Id: updatedMerchant.Id,
+		MerchantName: updatedMerchant.MerchantName,
+		Province: updatedMerchant.Province.Province,
+		City: updatedMerchant.City,
+		University: updatedMerchant.University.University,
+		Faculty: updatedMerchant.Faculty,
+		PhoneNumber: updatedMerchant.PhoneNumber,
+		Instagram: updatedMerchant.PhoneNumber,
+		MerchantPhoto: updatedMerchant.MerchantPhoto,
+	}
+
+	return updatedMerchantResponse, nil
 }
 
-func (u *MerchantUsecase) UploadMerchantPhoto(c *gin.Context, merchantId uuid.UUID, merchantPhoto *multipart.FileHeader) (domain.Merchants, error) {
+func (u *MerchantUsecase) UploadMerchantPhoto(c *gin.Context, merchantId uuid.UUID, merchantPhoto *multipart.FileHeader) (domain.MerchantProfileResponse, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{Id: merchantId})
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusNotFound, "an error occured when get merchant", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get merchant", err)
 	}
 
 	if user.Id != merchant.UserId {
-		return domain.Merchants{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
 	}
 
 	if merchant.MerchantPhoto != "" {
 		err = u.supabase.Delete(merchant.MerchantPhoto)
 		if err != nil {
-			return domain.Merchants{}, response.NewError(http.StatusInternalServerError, "an error occured when delete old merchant photo", err)
+			return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when delete old merchant photo", err)
 		}
 	}
 
@@ -238,19 +278,31 @@ func (u *MerchantUsecase) UploadMerchantPhoto(c *gin.Context, merchantId uuid.UU
 
 	newMerchantPhoto, err := u.supabase.Upload(merchantPhoto)
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusInternalServerError, "an error occured when upload photo", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when upload photo", err)
 	}
 
 	err = u.merchantRepository.UpdateMerchant(&domain.UpdateMerchant{MerchantPhoto: newMerchantPhoto}, merchant.Id)
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusInternalServerError, "an error occured when update merchant photo", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when update merchant photo", err)
 	}
 
 	var updatedMerchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&updatedMerchant, domain.MerchantParam{Id: merchant.Id})
 	if err != nil {
-		return domain.Merchants{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated merchant", err)
+		return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated merchant", err)
 	}
 
-	return updatedMerchant, nil
+	updatedMerchantResponse := domain.MerchantProfileResponse {
+		Id: updatedMerchant.Id,
+		MerchantName: updatedMerchant.MerchantName,
+		Province: updatedMerchant.Province.Province,
+		City: updatedMerchant.City,
+		University: updatedMerchant.University.University,
+		Faculty: updatedMerchant.Faculty,
+		PhoneNumber: updatedMerchant.PhoneNumber,
+		Instagram: updatedMerchant.PhoneNumber,
+		MerchantPhoto: updatedMerchant.MerchantPhoto,
+	}
+
+	return updatedMerchantResponse, nil
 }

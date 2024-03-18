@@ -21,9 +21,10 @@ import (
 type IProductUsecase interface {
 	GetProduct(productParam domain.ProductParam) (domain.ProductResponse, error)
 	GetProducts(productParam domain.ProductParam) ([]domain.ProductResponses, error)
+	GetOwnProduct(productParam domain.ProductParam) (domain.ProductProfileResponse, error)
 	CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error
-	UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.Products, error)
-	UploadProductPhoto(c *gin.Context, productId uuid.UUID, productPhoto *multipart.FileHeader) (domain.Products, error)
+	UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.ProductProfileResponse, error)
+	UploadProductPhoto(c *gin.Context, productId uuid.UUID, productPhoto *multipart.FileHeader) (domain.ProductProfileResponse, error)
 }
 
 type ProductUsecase struct {
@@ -56,19 +57,19 @@ func (u *ProductUsecase) GetProduct(productParam domain.ProductParam) (domain.Pr
 	countryPhoneNumber := strings.Replace(product.Merchant.PhoneNumber, "0", "+62", 1)
 	linkWhatsApp := fmt.Sprintf("https://wa.me/%v", countryPhoneNumber)
 
-	productResponse := domain.ProductResponse {
-		Id: product.Id,
-		Name: product.Name,
-		Description: product.Description,
-		Price: product.Price,
+	productResponse := domain.ProductResponse{
+		Id:           product.Id,
+		Name:         product.Name,
+		Description:  product.Description,
+		Price:        product.Price,
 		ProductPhoto: product.ProductPhoto,
 		MerchantName: product.Merchant.MerchantName,
-		University: product.Merchant.University.University,
-		Faculty: product.Merchant.Faculty,
-		Province: product.Merchant.Province.Province,
-		City: product.Merchant.City,
-		WhatsApp: linkWhatsApp,
-		Instagram: product.Merchant.Instagram,
+		University:   product.Merchant.University.University,
+		Faculty:      product.Merchant.Faculty,
+		Province:     product.Merchant.Province.Province,
+		City:         product.Merchant.City,
+		WhatsApp:     linkWhatsApp,
+		Instagram:    product.Merchant.Instagram,
 	}
 
 	return productResponse, nil
@@ -117,6 +118,25 @@ func (u *ProductUsecase) GetProducts(productParam domain.ProductParam) ([]domain
 	return productResponses, nil
 }
 
+func (u *ProductUsecase) GetOwnProduct(productParam domain.ProductParam) (domain.ProductProfileResponse, error) {
+	var product domain.Products
+	err := u.productRepository.GetProduct(&product, productParam)
+	if err != nil {
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
+	}
+
+	productResponse := domain.ProductProfileResponse{
+		Id:           product.Id,
+		Name:         product.Name,
+		Description:  product.Description,
+		Category:     product.Category.Category,
+		Price:        product.Price,
+		ProductPhoto: product.ProductPhoto,
+	}
+
+	return productResponse, nil
+}
+
 func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
@@ -161,68 +181,77 @@ func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.Pro
 	return nil
 }
 
-func (u *ProductUsecase) UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.Products, error) {
+func (u *ProductUsecase) UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.ProductProfileResponse, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	var product domain.Products
 	err = u.productRepository.GetProduct(&product, domain.ProductParam{Id: productId})
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
 	}
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusNotFound, "merchant not found", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "merchant not found", err)
 	}
 
 	if merchant.Id != product.MerchantId {
-		return domain.Products{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
 	}
 
 	err = u.productRepository.UpdateProduct(&updateProduct, product.Id)
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusInternalServerError, "an error occured when update product", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when update product", err)
 	}
 
 	var updatedProduct domain.Products
 	err = u.productRepository.GetProduct(&updatedProduct, domain.ProductParam{Id: product.Id})
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated product", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated product", err)
 	}
 
-	return updatedProduct, nil
+	updatedProductResponse := domain.ProductProfileResponse{
+		Id: updatedProduct.Id,
+		Name: updatedProduct.Name,
+		Description: updatedProduct.Description,
+		Price: updatedProduct.Price,
+		ProductPhoto: updatedProduct.ProductPhoto,
+		Category: updatedProduct.Category.Category,
+	}
+
+	return updatedProductResponse, nil
 }
 
-func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId uuid.UUID, productPhoto *multipart.FileHeader) (domain.Products, error) {
+func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId uuid.UUID, productPhoto *multipart.FileHeader) (domain.ProductProfileResponse, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	var product domain.Products
 	err = u.productRepository.GetProduct(&product, domain.ProductParam{Id: productId})
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
 	}
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusNotFound, "merchant not found", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "merchant not found", err)
 	}
 
 	if merchant.Id != product.MerchantId {
-		return domain.Products{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not edit other people merchant"))
 	}
 
 	if product.ProductPhoto != "" {
 		err = u.supabase.Delete(product.ProductPhoto)
 		if err != nil {
-			return domain.Products{}, response.NewError(http.StatusInternalServerError, "error occured when deleting old product photo", err)
+			return domain.ProductProfileResponse{}, response.NewError(http.StatusInternalServerError, "error occured when deleting old product photo", err)
 		}
 	}
 
@@ -231,19 +260,27 @@ func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId uuid.UUID,
 
 	newProductPhoto, err := u.supabase.Upload(productPhoto)
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusInternalServerError, "failed to upload photo", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusInternalServerError, "failed to upload photo", err)
 	}
 
 	err = u.productRepository.UpdateProduct(&domain.ProductUpdate{ProductPhoto: newProductPhoto}, product.Id)
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusInternalServerError, "an error occured when update product", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when update product", err)
 	}
 
 	var updatedProduct domain.Products
 	err = u.productRepository.GetProduct(&updatedProduct, domain.ProductParam{Id: product.Id})
 	if err != nil {
-		return domain.Products{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated product", err)
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated product", err)
 	}
 
-	return updatedProduct, nil
-}
+	updatedProductResponse := domain.ProductProfileResponse{
+		Id: updatedProduct.Id,
+		Name: updatedProduct.Name,
+		Description: updatedProduct.Description,
+		Price: updatedProduct.Price,
+		ProductPhoto: updatedProduct.ProductPhoto,
+		Category: updatedProduct.Category.Category,
+	}
+
+	return updatedProductResponse, nil}

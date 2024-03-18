@@ -22,7 +22,7 @@ func NewMerchantRepository(db *gorm.DB) IMerchantRepository {
 }
 
 func (r *MerchantRepository) GetMerchant(merchant *domain.Merchants, param domain.MerchantParam) error {
-	err := r.db.First(merchant, param).Error
+	err := r.db.Preload("University").Preload("Province").First(merchant, param).Error
 	if err != nil {
 		return err
 	}

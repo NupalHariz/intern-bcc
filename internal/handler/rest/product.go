@@ -92,11 +92,14 @@ func (r *Rest) GetProducts(c *gin.Context) {
 }
 
 func (r *Rest) GetProduct(c *gin.Context) {
-	var productParam domain.ProductParam
-	err := c.ShouldBind(&productParam)
+	productIdString := c.Param("productId")
+	productId, err := uuid.Parse(productIdString)
 	if err != nil {
-		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing product id", err))
 		return
+	}
+	productParam := domain.ProductParam{
+		Id: productId,
 	}
 
 	product, err := r.usecase.ProductUsecase.GetProduct(productParam)
@@ -106,4 +109,24 @@ func (r *Rest) GetProduct(c *gin.Context) {
 	}
 
 	response.Success(c, "success get product data", product)
+}
+
+func (r *Rest) GetOwnProduct(c *gin.Context) {
+	productIdString := c.Param("productId")
+	productId, err := uuid.Parse(productIdString)
+	if err != nil {
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing product id", err))
+		return
+	}
+	productParam := domain.ProductParam{
+		Id: productId,
+	}
+
+	ownProduct, err := r.usecase.ProductUsecase.GetOwnProduct(productParam)
+	if err != nil {
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "success get product data", ownProduct)
 }

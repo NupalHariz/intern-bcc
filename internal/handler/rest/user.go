@@ -46,11 +46,55 @@ func (r *Rest) Login(c *gin.Context) {
 	response.Success(c, "login success", loginRespone)
 }
 
+func (r *Rest) GetUser(c *gin.Context) {
+	var userParam domain.UserParam
+	err := c.ShouldBind(&userParam)
+	if err != nil {
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
+	}
+
+	user, err := r.usecase.UserUsecase.GetUser(userParam)
+	if err != nil {
+		response.Failed(c, err)
+	}
+
+	response.Success(c, "success get profile user", user)
+}
+
+func (r *Rest) GetOwnProducts(c *gin.Context) {
+	products, err := r.usecase.UserUsecase.GetOwnProducts(c)
+	if err != nil {
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "success", products)
+}
+
+func (r *Rest) GetLikeProduct(c *gin.Context) {
+	products, err := r.usecase.UserUsecase.GetLikeProducts(c)
+	if err != nil {
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "success get like product", products)
+}
+
+func (r *Rest) GetOwnMentors(c *gin.Context) {
+	mentors, err := r.usecase.UserUsecase.GetOwnMentors(c)
+	if err != nil {
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "success get own mentor", mentors)
+}
+
 func (r *Rest) UpdateUser(c *gin.Context) {
 	userIdString := c.Param("userId")
 	userId, err := uuid.Parse(userIdString)
-	// var userParam domain.UserParam
-	// err = c.ShouldBindUri(&userParam)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing user id", err))
 	}

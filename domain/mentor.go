@@ -64,3 +64,10 @@ type MentorResponse struct {
 	Price       uint64    `json:"price"`
 	Experiences []string  `json:"experiences"`
 }
+
+type OwnMentorResponses struct {
+	Id            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	CurrentJob    string    `json:"current_job"`
+	MentorPicture string    `json:"mentor_picture"`
+}

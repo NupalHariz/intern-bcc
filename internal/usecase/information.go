@@ -17,8 +17,8 @@ type IInformationUsecase interface {
 	GetInformations() (domain.InformationResponses, error)
 	GetArticle(informationParam domain.InformationParam) (domain.Article, error)
 	CreateInformation(informationRequest domain.InformationRequest) error
-	UpdateInformation(informationParam domain.InformationParam, informationUpdate domain.InformationUpdate) (domain.Information, error)
-	UploadInformationPhoto(informationParam domain.InformationParam, informationPhoto *multipart.FileHeader) (domain.Information, error)
+	UpdateInformation(informationParam domain.InformationParam, informationUpdate domain.InformationUpdate) error
+	UploadInformationPhoto(informationParam domain.InformationParam, informationPhoto *multipart.FileHeader) error
 }
 
 type InformationUsecase struct {
@@ -119,42 +119,42 @@ func (u *InformationUsecase) CreateInformation(informationRequest domain.Informa
 	return nil
 }
 
-func (u *InformationUsecase) UpdateInformation(informationParam domain.InformationParam, informationUpdate domain.InformationUpdate) (domain.Information, error) {
+func (u *InformationUsecase) UpdateInformation(informationParam domain.InformationParam, informationUpdate domain.InformationUpdate) error {
 	var information domain.Information
 	err := u.informationRepository.GetInformation(&information, informationParam)
 	if err != nil {
-		return domain.Information{}, response.NewError(http.StatusNotFound, "an error occured when get information", err)
+		return response.NewError(http.StatusNotFound, "an error occured when get information", err)
 	}
 
 	if information.CategoryId != 7 {
-		return domain.Information{}, response.NewError(http.StatusBadRequest, "update failed", errors.New("only can update atricle"))
+		return response.NewError(http.StatusBadRequest, "update failed", errors.New("only can update atricle"))
 	}
 
 	err = u.informationRepository.UpdateInformation(&informationUpdate, information.Id)
 	if err != nil {
-		return domain.Information{}, response.NewError(http.StatusInternalServerError, "an error occured when update information", err)
+		return response.NewError(http.StatusInternalServerError, "an error occured when update information", err)
 	}
 
 	var updatedInformation domain.Information
 	err = u.informationRepository.GetInformation(&updatedInformation, informationParam)
 	if err != nil {
-		return domain.Information{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated information", err)
+		return response.NewError(http.StatusInternalServerError, "an error occured when get updated information", err)
 	}
 
-	return updatedInformation, nil
+	return nil
 }
 
-func (u *InformationUsecase) UploadInformationPhoto(informationParam domain.InformationParam, informationPhoto *multipart.FileHeader) (domain.Information, error) {
+func (u *InformationUsecase) UploadInformationPhoto(informationParam domain.InformationParam, informationPhoto *multipart.FileHeader) error {
 	var information domain.Information
 	err := u.informationRepository.GetInformation(&information, informationParam)
 	if err != nil {
-		return domain.Information{}, response.NewError(http.StatusNotFound, "an error occured when get information", err)
+		return response.NewError(http.StatusNotFound, "an error occured when get information", err)
 	}
 
 	if information.InformationPhoto != "" {
 		err = u.supabase.Delete(information.InformationPhoto)
 		if err != nil {
-			return domain.Information{}, response.NewError(http.StatusInternalServerError, "an error occured when deleting old information photo", err)
+			return response.NewError(http.StatusInternalServerError, "an error occured when deleting old information photo", err)
 		}
 	}
 
@@ -163,19 +163,19 @@ func (u *InformationUsecase) UploadInformationPhoto(informationParam domain.Info
 
 	newInformationPhoto, err := u.supabase.Upload(informationPhoto)
 	if err != nil {
-		return domain.Information{}, response.NewError(http.StatusInternalServerError, "an error occured when upload photo", err)
+		return response.NewError(http.StatusInternalServerError, "an error occured when upload photo", err)
 	}
 
 	err = u.informationRepository.UpdateInformation(&domain.InformationUpdate{InformationPhoto: newInformationPhoto}, information.Id)
 	if err != nil {
-		return domain.Information{}, response.NewError(http.StatusInternalServerError, "an error occured when update information", err)
+		return response.NewError(http.StatusInternalServerError, "an error occured when update information", err)
 	}
 
 	var updatedInformation domain.Information
 	err = u.informationRepository.GetInformation(&updatedInformation, informationParam)
 	if err != nil {
-		return domain.Information{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated information", err)
+		return response.NewError(http.StatusInternalServerError, "an error occured when get updated information", err)
 	}
 
-	return updatedInformation, nil
+	return nil
 }

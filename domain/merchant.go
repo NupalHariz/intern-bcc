@@ -9,7 +9,7 @@ import (
 
 type Merchants struct {
 	Id            uuid.UUID    `json:"id" gorm:"type:varchar(36);unique"`
-	UserId        uuid.UUID    `json:"user_id" gorm:"type:varchar(36);unique"`
+	UserId        uuid.UUID    `json:"-" gorm:"type:varchar(36);unique"`
 	MerchantName  string       `json:"store_name"`
 	UniversityId  int          `json:"-"`
 	Faculty       string       `json:"faculty"`
@@ -47,12 +47,12 @@ type MerchantVerify struct {
 }
 
 type UpdateMerchant struct {
-	MerchantName  string `json:"store_name"`
+	MerchantName  string `json:"merchant_name"`
 	UniversityId  int    `json:"-"`
 	Faculty       string `json:"-"`
 	ProvinceId    int    `json:"-"`
 	City          string `json:"-"`
-	PhoneNumber   string `json:"phone_number" binding:"required"`
+	PhoneNumber   string `json:"phone_number"`
 	Instagram     string `json:"instagram"`
 	MerchantPhoto string `json:"-"`
 	IsActive      bool   `json:"-"`
@@ -60,4 +60,16 @@ type UpdateMerchant struct {
 
 type UploadMerchantPhoto struct {
 	MerchantPhoto *multipart.FileHeader `json:"merchant_photo"`
+}
+
+type MerchantProfileResponse struct {
+	Id            uuid.UUID `json:"id"`
+	MerchantName  string    `json:"merchant_name"`
+	Province      string    `json:"province"`
+	City          string    `json:"city"`
+	University    string    `json:"university"`
+	Faculty       string    `json:"faculty"`
+	PhoneNumber   string    `json:"phone_number"`
+	Instagram     string    `json:"instagram"`
+	MerchantPhoto string    `json:"merchant_photo"`
 }

@@ -28,7 +28,6 @@ func (m *Middleware) Authentication(c *gin.Context) {
 
 	user, err := m.usecase.UserUsecase.GetUser(domain.UserParam{Id: userId})
 	if err != nil {
-
 		response.Failed(c, err)
 	}
 

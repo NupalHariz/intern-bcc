@@ -9,6 +9,16 @@ import (
 	"github.com/google/uuid"
 )
 
+func (r *Rest) GetMerchant(c *gin.Context) {
+	merchant, err := r.usecase.MerchantUsecase.GetMerchant(c)
+	if err != nil{
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "success get merchant", merchant)
+}
+
 func (r *Rest) CreateMerchant(c *gin.Context) {
 	var merchantRequest domain.MerchantRequest
 

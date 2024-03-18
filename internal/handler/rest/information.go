@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
@@ -31,7 +30,7 @@ func (r *Rest) GetArticle(c *gin.Context) {
 	informationParam := domain.InformationParam{
 		Id: informationId,
 	}
-	
+
 	article, err := r.usecase.InformationUsecase.GetArticle(informationParam)
 	if err != nil {
 		response.Failed(c, err)
@@ -76,14 +75,13 @@ func (r *Rest) UpdateInformation(c *gin.Context) {
 		return
 	}
 
-	information, err := r.usecase.InformationUsecase.UpdateInformation(informationParam, informationUpdate)
+	err = r.usecase.InformationUsecase.UpdateInformation(informationParam, informationUpdate)
 	if err != nil {
 		response.Failed(c, err)
 		return
 	}
 
-	fmt.Println(information)
-	response.Success(c, "success update information", information)
+	response.Success(c, "success update information", nil)
 }
 
 func (r *Rest) UploadInformationPhoto(c *gin.Context) {
@@ -104,11 +102,11 @@ func (r *Rest) UploadInformationPhoto(c *gin.Context) {
 		return
 	}
 
-	information, err := r.usecase.InformationUsecase.UploadInformationPhoto(informationParam, informationPhoto)
+	err = r.usecase.InformationUsecase.UploadInformationPhoto(informationParam, informationPhoto)
 	if err != nil {
 		response.Failed(c, err)
 		return
 	}
 
-	response.Success(c, "success upload information photo", information)
+	response.Success(c, "success upload information photo", nil)
 }

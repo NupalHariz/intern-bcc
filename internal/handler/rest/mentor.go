@@ -67,13 +67,13 @@ func (r *Rest) UpdateMentor(c *gin.Context) {
 		return
 	}
 
-	mentor, err := r.usecase.MentorUsecase.UpdateMentor(mentorParam, mentorUpdate)
+	err = r.usecase.MentorUsecase.UpdateMentor(mentorParam, mentorUpdate)
 	if err != nil {
 		response.Failed(c, err)
 		return
 	}
 
-	response.Success(c, "succes create mentor", mentor)
+	response.Success(c, "succes create mentor", nil)
 }
 
 func (r *Rest) UploadMentorPicture(c *gin.Context) {
@@ -90,11 +90,11 @@ func (r *Rest) UploadMentorPicture(c *gin.Context) {
 		return
 	}
 
-	mentor, err := r.usecase.MentorUsecase.UploadMentorPhoto(mentorParam, mentorPicture)
+	err = r.usecase.MentorUsecase.UploadMentorPhoto(mentorParam, mentorPicture)
 	if err != nil {
 		response.Failed(c, err)
 		return
 	}
 
-	response.Success(c, "succes upload mentor picture", mentor)
+	response.Success(c, "succes upload mentor picture", nil)
 }
