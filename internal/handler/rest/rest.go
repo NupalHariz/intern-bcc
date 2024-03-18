@@ -47,6 +47,8 @@ func (r *Rest) MountEndpoint() {
 
 	//Mentor Endpoint
 	mentor := routerGroup.Group("/mentor")
+	mentor.GET("/:mentorId", r.GetMentor)
+	mentor.GET("/", r.GetMentors)
 	mentor.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateMentor)
 	mentor.PATCH("/:mentorId", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UpdateMentor)
 	mentor.PATCH("/:mentorId/upload-photo", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UploadMentorPicture)
@@ -56,6 +58,7 @@ func (r *Rest) MountEndpoint() {
 
 	//Product Endpoint
 	product := routerGroup.Group("/product")
+	product.GET("/:productId", r.GetProduct)
 	product.GET("/", r.GetProducts)
 	product.POST("/", r.middleware.Authentication, r.CreateProduct)
 	product.PATCH("/:productId", r.middleware.Authentication, r.UpdateProduct)
@@ -66,6 +69,8 @@ func (r *Rest) MountEndpoint() {
 
 	//Information Endpoint
 	information := routerGroup.Group("/information")
+	information.GET("/", r.GetInformations)
+	information.GET("/:informationId", r.GetArticle)
 	information.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateInformation)
 	information.PATCH("/:informationId", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UpdateInformation)
 	information.PATCH("/:informationId/upload-photo", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UploadInformationPhoto)

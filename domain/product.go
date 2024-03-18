@@ -28,8 +28,8 @@ type ProductParam struct {
 	Name         string    `json:"-" form:"name"`
 	ProvinceId   int       `json:"-" form:"province"`
 	UniversityId int       `json:"-" form:"university"`
-	Page         int       `json:"-" form:"page"`
-	Offset       int       `json:"-"`
+	Page         int       `json:"-" form:"page" gorm:"-"`
+	Offset       int       `json:"-" gorm:"-"`
 }
 
 type ProductRequest struct {
@@ -50,11 +50,26 @@ type UploadProductPhoto struct {
 	ProductPhoto *multipart.FileHeader `json:"product_photo"`
 }
 
-type ProductResponse struct {
+type ProductResponses struct {
 	Id           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
 	MerchantName string    `json:"merchant_name"`
 	University   string    `json:"university"`
 	Price        uint      `json:"price"`
 	ProductPhoto string    `json:"product_photo"`
+}
+
+type ProductResponse struct {
+	Id           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	MerchantName string    `json:"merchant_name"`
+	University   string    `json:"university"`
+	Faculty      string    `json:"faculty"`
+	Province     string    `json:"province"`
+	City         string    `json:"city"`
+	Price        uint      `json:"price"`
+	ProductPhoto string    `json:"product_photo"`
+	WhatsApp     string    `json:"whatsapp"`
+	Instagram    string    `json:"instagram"`
 }

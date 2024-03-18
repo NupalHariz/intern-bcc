@@ -68,6 +68,48 @@ func SeedData(db *gorm.DB) {
 			log.Fatal("error occured when creating university: ", err)
 		}
 	}
+
+	var totalInformation int64
+	if err := db.Model(domain.Information{}).Count(&totalInformation).Error; err != nil {
+		log.Fatal("error occured when counting Information: ", err)
+	}
+
+	if totalInformation == 0 {
+		if err := generateInformation(db); err != nil {
+			log.Fatal("error occured when creating informatin: ", err)
+		}
+	}
+}
+
+func generateInformation(db *gorm.DB) error {
+	var informations []*domain.Information
+	for i := 1; i < 15; i++ {
+		article := domain.Information{
+			Title: faker.Name(),
+			CategoryId: 7,
+			Synopsis: faker.Sentence(),
+			Content: faker.Paragraph(),
+		}
+		informations = append(informations, &article)
+
+		webinar := domain.Information{
+			Title: faker.Name(),
+			CategoryId: 8,
+		}
+		informations = append(informations, &webinar)
+
+		lomba := domain.Information{
+			Title: faker.Name(),
+			CategoryId: 9,
+		}
+		informations = append(informations, &lomba)
+	}
+
+	if err := db.CreateInBatches(&informations, 45).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func generateProvince(db *gorm.DB) error {
@@ -161,7 +203,7 @@ func generateMentor(db *gorm.DB) error {
 
 	for i := 1; i <= 5; i++ {
 		mentor := &domain.Mentors{
-			Id: uuid.New(),
+			Id:          uuid.New(),
 			Name:        faker.Name(),
 			CurrentJob:  faker.Word(),
 			Description: faker.Sentence(),

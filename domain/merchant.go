@@ -22,7 +22,8 @@ type Merchants struct {
 	CreatedAt     time.Time    `json:"-"`
 	UpdatedAt     time.Time    `json:"-"`
 	Products      []Products   `json:"-" gorm:"foreignKey:merchant_id;references:id"`
-	University    Universities `json:"university"`
+	University    Universities `json:"-"`
+	Province      Province     `json:"-"`
 }
 
 type MerchantRequest struct {

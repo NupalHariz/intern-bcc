@@ -28,6 +28,10 @@ type MentorRequest struct {
 	Price       uint64 `json:"price" binding:"required"`
 }
 
+type MentorParam struct {
+	MentorId uuid.UUID `json:"-"`
+}
+
 type MentorUpdate struct {
 	CurrentJob    string `json:"current_job"`
 	Description   string `json:"description"`
@@ -42,4 +46,21 @@ type UploadMentorPicture struct {
 type HasMentor struct {
 	UserId   uuid.UUID `json:"-"`
 	MentorId uuid.UUID `json:"-"`
+}
+
+type MentorResponses struct {
+	Id            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	CurrentJob    string    `json:"current_job"`
+	Price         uint64    `json:"price"`
+	MentorPicture string    `json:"mentor_picture"`
+}
+
+type MentorResponse struct {
+	Id          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	CurrentJob  string    `json:"current_job"`
+	Description string    `json:"description"`
+	Price       uint64    `json:"price"`
+	Experiences []string  `json:"experiences"`
 }

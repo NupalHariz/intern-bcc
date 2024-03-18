@@ -6,8 +6,34 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
+
+func (r *Rest) GetMentor(c *gin.Context) {
+	var mentorParam domain.MentorParam
+	err := c.ShouldBind(&mentorParam)
+	if err != nil {
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
+	}
+
+	mentor, err := r.usecase.MentorUsecase.GetMentor(mentorParam)
+	if err != nil {
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "success get mentor", mentor)
+}
+
+func (r *Rest) GetMentors(c *gin.Context) {
+	mentors, err := r.usecase.MentorUsecase.GetMentors()
+	if err != nil {
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "succes create mentor", mentors)
+}
 
 func (r *Rest) CreateMentor(c *gin.Context) {
 	var mentorRequest domain.MentorRequest
@@ -27,10 +53,10 @@ func (r *Rest) CreateMentor(c *gin.Context) {
 }
 
 func (r *Rest) UpdateMentor(c *gin.Context) {
-	mentorIdString := c.Param("mentorId")
-	mentorId, err := uuid.Parse(mentorIdString)
+	var mentorParam domain.MentorParam
+	err := c.ShouldBind(&mentorParam)
 	if err != nil {
-		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing mentor id", err))
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
@@ -41,7 +67,7 @@ func (r *Rest) UpdateMentor(c *gin.Context) {
 		return
 	}
 
-	mentor, err := r.usecase.MentorUsecase.UpdateMentor(mentorId, mentorUpdate)
+	mentor, err := r.usecase.MentorUsecase.UpdateMentor(mentorParam, mentorUpdate)
 	if err != nil {
 		response.Failed(c, err)
 		return
@@ -51,10 +77,10 @@ func (r *Rest) UpdateMentor(c *gin.Context) {
 }
 
 func (r *Rest) UploadMentorPicture(c *gin.Context) {
-	mentorIdString := c.Param("mentorId")
-	mentorId, err := uuid.Parse(mentorIdString)
+	var mentorParam domain.MentorParam
+	err := c.ShouldBind(&mentorParam)
 	if err != nil {
-		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing mentor id", err))
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
@@ -64,7 +90,7 @@ func (r *Rest) UploadMentorPicture(c *gin.Context) {
 		return
 	}
 
-	mentor, err := r.usecase.MentorUsecase.UploadMentorPhoto(mentorId, mentorPicture)
+	mentor, err := r.usecase.MentorUsecase.UploadMentorPhoto(mentorParam, mentorPicture)
 	if err != nil {
 		response.Failed(c, err)
 		return

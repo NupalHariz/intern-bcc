@@ -19,7 +19,8 @@ import (
 )
 
 type IProductUsecase interface {
-	GetProducts(productParam domain.ProductParam) ([]domain.ProductResponse, error)
+	GetProduct(productParam domain.ProductParam) (domain.ProductResponse, error)
+	GetProducts(productParam domain.ProductParam) ([]domain.ProductResponses, error)
 	CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error
 	UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.Products, error)
 	UploadProductPhoto(c *gin.Context, productId uuid.UUID, productPhoto *multipart.FileHeader) (domain.Products, error)
@@ -29,8 +30,8 @@ type ProductUsecase struct {
 	productRepository  repository.IProductRepository
 	merchantRepository repository.IMerchantRepository
 	categoryRepository repository.ICategoryRepository
-	jwt      jwt.IJwt
-	supabase supabase.ISupabase
+	jwt                jwt.IJwt
+	supabase           supabase.ISupabase
 }
 
 func NewProductUsecase(productRepository repository.IProductRepository, jwt jwt.IJwt,
@@ -45,7 +46,35 @@ func NewProductUsecase(productRepository repository.IProductRepository, jwt jwt.
 	}
 }
 
-func (u *ProductUsecase) GetProducts(productParam domain.ProductParam) ([]domain.ProductResponse, error) {
+func (u *ProductUsecase) GetProduct(productParam domain.ProductParam) (domain.ProductResponse, error) {
+	var product domain.Products
+	err := u.productRepository.GetProduct(&product, productParam)
+	if err != nil {
+		return domain.ProductResponse{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
+	}
+
+	countryPhoneNumber := strings.Replace(product.Merchant.PhoneNumber, "0", "+62", 1)
+	linkWhatsApp := fmt.Sprintf("https://wa.me/%v", countryPhoneNumber)
+
+	productResponse := domain.ProductResponse {
+		Id: product.Id,
+		Name: product.Name,
+		Description: product.Description,
+		Price: product.Price,
+		ProductPhoto: product.ProductPhoto,
+		MerchantName: product.Merchant.MerchantName,
+		University: product.Merchant.University.University,
+		Faculty: product.Merchant.Faculty,
+		Province: product.Merchant.Province.Province,
+		City: product.Merchant.City,
+		WhatsApp: linkWhatsApp,
+		Instagram: product.Merchant.Instagram,
+	}
+
+	return productResponse, nil
+}
+
+func (u *ProductUsecase) GetProducts(productParam domain.ProductParam) ([]domain.ProductResponses, error) {
 	if productParam.Page <= 0 {
 		productParam.Page = 1
 	}
@@ -56,24 +85,24 @@ func (u *ProductUsecase) GetProducts(productParam domain.ProductParam) ([]domain
 	var totalProduct int64
 	err := u.productRepository.GetTotalProduct(&totalProduct)
 	if err != nil {
-		return []domain.ProductResponse{}, response.NewError(http.StatusInternalServerError, "failed to get total product", err)
+		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "failed to get total product", err)
 	}
 
 	totalPage := (int)(math.Ceil(float64(totalProduct) / 6))
-	if productParam.Page > totalPage{
-		return []domain.ProductResponse{}, response.NewError(http.StatusBadRequest, "can not find page", errors.New("request page bigger than maximum page"))
+	if productParam.Page > totalPage {
+		return []domain.ProductResponses{}, response.NewError(http.StatusBadRequest, "can not find page", errors.New("request page bigger than maximum page"))
 	}
 
 	var products []domain.Products
 	fmt.Println(productParam)
 	err = u.productRepository.GetProducts(&products, productParam)
 	if err != nil {
-		return []domain.ProductResponse{}, response.NewError(http.StatusInternalServerError, "failed", err)
+		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "failed", err)
 	}
 
-	var productResponses []domain.ProductResponse
+	var productResponses []domain.ProductResponses
 	for _, p := range products {
-		productResponse := domain.ProductResponse{
+		productResponse := domain.ProductResponses{
 			Id:           p.Id,
 			Name:         p.Name,
 			MerchantName: p.Merchant.MerchantName,

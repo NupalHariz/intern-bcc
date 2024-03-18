@@ -7,8 +7,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type IMentorRepository interface{
-	GetMentor(mentor *domain.Mentors, mentorParam domain.Mentors) error 
+type IMentorRepository interface {
+	GetMentor(mentor *domain.Mentors, mentorParam domain.MentorParam) error
+	GetMentors(mentors *[]domain.Mentors) error
 	CreateMentor(newMentor *domain.Mentors) error
 	UpdateMentor(mentor *domain.MentorUpdate, mentorId uuid.UUID) error
 }
@@ -21,8 +22,19 @@ func NewMentorRepository(db *gorm.DB) IMentorRepository {
 	return &MentorRepository{db}
 }
 
-func(r *MentorRepository) GetMentor(mentor *domain.Mentors, mentorParam domain.Mentors) error {
-	err := r.db.First(mentor, mentorParam).Error
+func (r *MentorRepository) GetMentor(mentor *domain.Mentors, mentorParam domain.MentorParam) error {
+	err := r.db.Debug().Preload("Experiences", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")}, func(db *gorm.DB) *gorm.DB {
+			return db.Limit(3)}).First(mentor, mentorParam).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *MentorRepository) GetMentors(mentors *[]domain.Mentors) error {
+	err := r.db.Debug().Limit(15).Order("created_at desc").Find(mentors).Error
 	if err != nil {
 		return err
 	}
@@ -41,7 +53,7 @@ func (r *MentorRepository) CreateMentor(newMentor *domain.Mentors) error {
 
 func (r *MentorRepository) UpdateMentor(mentor *domain.MentorUpdate, mentorId uuid.UUID) error {
 	err := r.db.Where("id = ?", mentorId).Updates(mentor).Error
-	if err != nil{
+	if err != nil {
 		return err
 	}
 

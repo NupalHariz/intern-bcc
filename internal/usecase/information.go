@@ -14,9 +14,11 @@ import (
 )
 
 type IInformationUsecase interface {
+	GetInformations() (domain.InformationResponses, error)
+	GetArticle(informationParam domain.InformationParam) (domain.Article, error)
 	CreateInformation(informationRequest domain.InformationRequest) error
-	UpdateInformation(informationId int, informationUpdate domain.InformationUpdate) (domain.Information, error)
-	UploadInformationPhoto(informationId int, informationPhoto *multipart.FileHeader) (domain.Information, error)
+	UpdateInformation(informationParam domain.InformationParam, informationUpdate domain.InformationUpdate) (domain.Information, error)
+	UploadInformationPhoto(informationParam domain.InformationParam, informationPhoto *multipart.FileHeader) (domain.Information, error)
 }
 
 type InformationUsecase struct {
@@ -32,6 +34,63 @@ func NewInformatinUsecase(informationRepository repository.IInformationRepositor
 		categoryRepository:    categoryRepository,
 		supabase:              supabase,
 	}
+}
+
+func (u *InformationUsecase) GetInformations() (domain.InformationResponses, error) {
+	var articles []domain.Articles
+	err := u.informationRepository.GetArticles(&articles)
+	if err != nil {
+		return domain.InformationResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get information", err)
+	}
+
+	var otherInformation []domain.Information
+	err = u.informationRepository.GetWebinarNCompetition(&otherInformation)
+	if err != nil {
+		return domain.InformationResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get information", err)
+	}
+
+	var webinarNCompetitions []domain.WebinarNCompetition
+
+	for _, i := range otherInformation {
+		webinarnCompetition := domain.WebinarNCompetition{
+			Id:               i.Id,
+			Title:            i.Title,
+			Category:         i.Category.Category,
+			InformationPhoto: i.InformationPhoto,
+		}
+
+		webinarNCompetitions = append(webinarNCompetitions, webinarnCompetition)
+	}
+
+	informationResponses := domain.InformationResponses{
+		Articles:            articles,
+		WebinarNCompetition: webinarNCompetitions,
+	}
+
+	return informationResponses, nil
+}
+
+func (u *InformationUsecase) GetArticle(informationParam domain.InformationParam) (domain.Article, error) {
+	var information domain.Information
+	err := u.informationRepository.GetInformation(&information, informationParam)
+	if err != nil {
+		return domain.Article{}, response.NewError(http.StatusInternalServerError, "an error occured when get artivle", err)
+	}
+
+	if information.CategoryId != 7 {
+		return domain.Article{}, response.NewError(http.StatusBadRequest, "an error occured when get article", errors.New("category id is not article"))
+	}
+
+	article := domain.Article{
+		Id:               information.Id,
+		Title:            information.Title,
+		Content:          information.Content,
+		InformationPhoto: information.InformationPhoto,
+		CreatedAt:        information.CreatedAt.Format(time.RFC822Z),
+		UpdatedAt:        information.UpdatedAt.Format(time.RFC822Z),
+	}
+
+	return article, err
 }
 
 func (u *InformationUsecase) CreateInformation(informationRequest domain.InformationRequest) error {
@@ -60,9 +119,9 @@ func (u *InformationUsecase) CreateInformation(informationRequest domain.Informa
 	return nil
 }
 
-func (u *InformationUsecase) UpdateInformation(informationId int, informationUpdate domain.InformationUpdate) (domain.Information, error) {
+func (u *InformationUsecase) UpdateInformation(informationParam domain.InformationParam, informationUpdate domain.InformationUpdate) (domain.Information, error) {
 	var information domain.Information
-	err := u.informationRepository.GetInformation(&information, domain.Information{Id: informationId})
+	err := u.informationRepository.GetInformation(&information, informationParam)
 	if err != nil {
 		return domain.Information{}, response.NewError(http.StatusNotFound, "an error occured when get information", err)
 	}
@@ -77,7 +136,7 @@ func (u *InformationUsecase) UpdateInformation(informationId int, informationUpd
 	}
 
 	var updatedInformation domain.Information
-	err = u.informationRepository.GetInformation(&updatedInformation, domain.Information{Id: information.Id})
+	err = u.informationRepository.GetInformation(&updatedInformation, informationParam)
 	if err != nil {
 		return domain.Information{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated information", err)
 	}
@@ -85,9 +144,9 @@ func (u *InformationUsecase) UpdateInformation(informationId int, informationUpd
 	return updatedInformation, nil
 }
 
-func (u *InformationUsecase) UploadInformationPhoto(informationId int, informationPhoto *multipart.FileHeader) (domain.Information, error) {
+func (u *InformationUsecase) UploadInformationPhoto(informationParam domain.InformationParam, informationPhoto *multipart.FileHeader) (domain.Information, error) {
 	var information domain.Information
-	err := u.informationRepository.GetInformation(&information, domain.Information{Id: informationId})
+	err := u.informationRepository.GetInformation(&information, informationParam)
 	if err != nil {
 		return domain.Information{}, response.NewError(http.StatusNotFound, "an error occured when get information", err)
 	}
@@ -100,8 +159,7 @@ func (u *InformationUsecase) UploadInformationPhoto(informationId int, informati
 	}
 
 	informationPhoto.Filename = fmt.Sprintf("%v-%v", time.Now().String(), informationPhoto.Filename)
-		informationPhoto.Filename = strings.Replace(informationPhoto.Filename, " ", "-", -1)
-	
+	informationPhoto.Filename = strings.Replace(informationPhoto.Filename, " ", "-", -1)
 
 	newInformationPhoto, err := u.supabase.Upload(informationPhoto)
 	if err != nil {
@@ -114,7 +172,7 @@ func (u *InformationUsecase) UploadInformationPhoto(informationId int, informati
 	}
 
 	var updatedInformation domain.Information
-	err = u.informationRepository.GetInformation(&updatedInformation, domain.Information{Id: information.Id})
+	err = u.informationRepository.GetInformation(&updatedInformation, informationParam)
 	if err != nil {
 		return domain.Information{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated information", err)
 	}

@@ -4,14 +4,17 @@ import (
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (r *Rest) AddExperience(c *gin.Context) {
 	mentorIdString := c.Param("mentorId")
-	mentorId, _ := strconv.Atoi(mentorIdString)
+	mentorId, _ := uuid.Parse(mentorIdString)
+	mentorParam := domain.MentorParam{
+		MentorId: mentorId,
+	}
 
 	var experienceRequest domain.ExperienceRequest
 
@@ -21,7 +24,7 @@ func (r *Rest) AddExperience(c *gin.Context) {
 		return
 	}
 
-	err = r.usecase.ExperienceUsecase.AddExperience(experienceRequest, mentorId)
+	err = r.usecase.ExperienceUsecase.AddExperience(experienceRequest, mentorParam)
 	if err != nil {
 		response.Failed(c, err)
 		return

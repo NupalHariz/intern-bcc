@@ -90,3 +90,20 @@ func (r *Rest) GetProducts(c *gin.Context) {
 
 	response.Success(c, "success get product data", products)
 }
+
+func (r *Rest) GetProduct(c *gin.Context) {
+	var productParam domain.ProductParam
+	err := c.ShouldBind(&productParam)
+	if err != nil {
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
+	}
+
+	product, err := r.usecase.ProductUsecase.GetProduct(productParam)
+	if err != nil {
+		response.Failed(c, err)
+		return
+	}
+
+	response.Success(c, "success get product data", product)
+}

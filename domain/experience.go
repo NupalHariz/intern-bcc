@@ -1,9 +1,13 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Experiences struct {
-	MentorId   int       `json:"-"`
+	MentorId   uuid.UUID `json:"-"`
 	Experience string    `json:"-"`
 	CreatedAt  time.Time `json:"-"`
 	UpdatedAt  time.Time `json:"-"`
