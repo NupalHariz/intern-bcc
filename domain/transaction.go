@@ -25,10 +25,10 @@ type TransactionRequest struct {
 }
 
 type TransactionResponse struct {
-	TransactionId string `json:"transaction_id"`
-	PaymentType   string `json:"payment_type"`
-	VaNumber      string `json:"va_number"`
-	BillerCode    string `json:"biller_code"`
-	BillKey       string `json:"bill_key"`
-	URL           string `json:"url"`
+	OrderId     string `json:"order_id"`
+	PaymentType string `json:"payment_type"`
+	VaNumber    string `json:"va_number"`
+	BillerCode  string `json:"biller_code"`
+	BillKey     string `json:"bill_key"`
+	URL         string `json:"url"`
 }

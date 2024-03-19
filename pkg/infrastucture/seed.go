@@ -14,7 +14,7 @@ import (
 func SeedData(db *gorm.DB) {
 	var totalCategory int64
 
-	if err := db.Debug().Model(domain.Categories{}).Count(&totalCategory).Error; err != nil {
+	if err := db.Model(domain.Categories{}).Count(&totalCategory).Error; err != nil {
 		log.Fatal("error occured when counting category: ", err)
 	}
 
@@ -85,21 +85,21 @@ func generateInformation(db *gorm.DB) error {
 	var informations []*domain.Information
 	for i := 1; i < 15; i++ {
 		article := domain.Information{
-			Title: faker.Name(),
+			Title:      faker.Name(),
 			CategoryId: 7,
-			Synopsis: faker.Sentence(),
-			Content: faker.Paragraph(),
+			Synopsis:   faker.Sentence(),
+			Content:    faker.Paragraph(),
 		}
 		informations = append(informations, &article)
 
 		webinar := domain.Information{
-			Title: faker.Name(),
+			Title:      faker.Name(),
 			CategoryId: 8,
 		}
 		informations = append(informations, &webinar)
 
 		lomba := domain.Information{
-			Title: faker.Name(),
+			Title:      faker.Name(),
 			CategoryId: 9,
 		}
 		informations = append(informations, &lomba)

@@ -27,7 +27,7 @@ type Users struct {
 type UserRequest struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Password string `json:"password" binding:"required,min=8,max=15"`
 }
 
 type UserLogin struct {
@@ -55,7 +55,8 @@ type UserUpdate struct {
 }
 
 type PasswordUpdate struct {
-	Password string `json:"password"`
+	Password        string `json:"password" binding:"required,min=8,max=15"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,min=8,max=15"`
 }
 
 type LikeProduct struct {

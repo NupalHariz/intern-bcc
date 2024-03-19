@@ -24,7 +24,16 @@ func NewProductRepository(db *gorm.DB) IProductRepository {
 }
 
 func (r *ProductRepository) GetProducts(product *[]domain.Products, productParam domain.ProductParam) error {
-	err := r.db.Debug().Limit(6).Offset(productParam.Offset).Preload("Merchant.University").Find(product, productParam).Error
+	err := r.db.
+		Joins("JOIN merchants ON merchants.id = products.merchant_id").
+		Joins("JOIN universities ON universities.id = merchants.university_id").
+		Joins("JOIN provinces ON provinces.id = merchants.province_id").
+		Where("IF(? != 0, universities.id = ?, 1) AND IF(? != 0, provinces.id = ?, 1)", productParam.UniversityId, productParam.UniversityId, productParam.ProvinceId, productParam.ProvinceId).
+		Limit(6).
+		Offset(productParam.Offset).
+		Preload("Merchant.University").
+		Preload("Merchant.Province").
+		Find(&product, productParam).Error
 	if err != nil {
 		return err
 	}
@@ -60,9 +69,9 @@ func (r *ProductRepository) CreateProduct(newProduct *domain.Products) error {
 }
 
 func (r *ProductRepository) UpdateProduct(product *domain.ProductUpdate, productId uuid.UUID) error {
-	err := r.db.Where("id = ?", productId).Updates(product).Error
+	err := r.db.Model(domain.Products{}).Where("id = ?", productId).Updates(product).Error
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return nil

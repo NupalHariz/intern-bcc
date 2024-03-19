@@ -27,7 +27,7 @@ type Merchants struct {
 }
 
 type MerchantRequest struct {
-	MerchantName string `json:"store_name" `
+	MerchantName string `json:"merchant_name"`
 	University   string `json:"university" binding:"required"`
 	Faculty      string `json:"faculty" binding:"required"`
 	Province     string `json:"province" binding:"required"`

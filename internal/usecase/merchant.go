@@ -105,6 +105,10 @@ func (u *MerchantUsecase) CreateMerchant(c *gin.Context, merchantRequest domain.
 
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
+
+	if merchant.IsActive {
+		return response.NewError(http.StatusBadRequest, "an error occured when create merchant", errors.New("you already have merchant"))
+	}
 	if err == nil {
 		updateMerchant := domain.UpdateMerchant{
 			MerchantName: merchantRequest.MerchantName,
@@ -243,7 +247,7 @@ func (u *MerchantUsecase) UpdateMerchant(c *gin.Context, merchantId uuid.UUID, u
 		University: updatedMerchant.University.University,
 		Faculty: updatedMerchant.Faculty,
 		PhoneNumber: updatedMerchant.PhoneNumber,
-		Instagram: updatedMerchant.PhoneNumber,
+		Instagram: updatedMerchant.Instagram,
 		MerchantPhoto: updatedMerchant.MerchantPhoto,
 	}
 
@@ -300,7 +304,7 @@ func (u *MerchantUsecase) UploadMerchantPhoto(c *gin.Context, merchantId uuid.UU
 		University: updatedMerchant.University.University,
 		Faculty: updatedMerchant.Faculty,
 		PhoneNumber: updatedMerchant.PhoneNumber,
-		Instagram: updatedMerchant.PhoneNumber,
+		Instagram: updatedMerchant.Instagram,
 		MerchantPhoto: updatedMerchant.MerchantPhoto,
 	}
 

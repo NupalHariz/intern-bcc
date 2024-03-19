@@ -33,8 +33,8 @@ type ProductParam struct {
 	MerchantId   int       `json:"-"`
 	CategoryId   int       `json:"-" form:"categoryId"`
 	Name         string    `json:"-" form:"name"`
-	ProvinceId   int       `json:"-" form:"province"`
-	UniversityId int       `json:"-" form:"university"`
+	ProvinceId   int       `json:"-" form:"province" gorm:"-"`
+	UniversityId int       `json:"-" form:"university" gorm:"-"`
 	Page         int       `json:"-" form:"page" gorm:"-"`
 	Offset       int       `json:"-" gorm:"-"`
 }
@@ -43,11 +43,12 @@ type ProductRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Price       uint   `json:"price" binding:"required"`
 	Description string `json:"description" binding:"required"`
-	Category    string `json:"category" binding:"required"`
+	Category    int    `json:"category" binding:"required"`
 }
 
 type ProductUpdate struct {
 	Name         string `json:"name"`
+	Category     int    `json:"category"`
 	Price        uint   `json:"price"`
 	Description  string `json:"description"`
 	ProductPhoto string `json:"-"`

@@ -23,14 +23,16 @@ type ITransactionUsecase interface {
 type TransactionUsecase struct {
 	transactionRepository repository.ITransactionRepository
 	userRepository        repository.IUserRepository
+	mentorRepository      repository.IMentorRepository
 	jwt                   jwt.IJwt
 	midTrans              midtrans.IMidTrans
 }
 
-func NewTransactionUsecase(transactionRepository repository.ITransactionRepository, userRepository repository.IUserRepository, jwt jwt.IJwt, midTrans midtrans.IMidTrans) ITransactionUsecase {
+func NewTransactionUsecase(transactionRepository repository.ITransactionRepository, userRepository repository.IUserRepository, mentorRepository repository.IMentorRepository, jwt jwt.IJwt, midTrans midtrans.IMidTrans) ITransactionUsecase {
 	return &TransactionUsecase{
 		transactionRepository: transactionRepository,
 		userRepository:        userRepository,
+		mentorRepository:      mentorRepository,
 		jwt:                   jwt,
 		midTrans:              midTrans,
 	}
@@ -42,6 +44,12 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId uuid.UUI
 		return domain.TransactionResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
+	var mentor domain.Mentors
+	err = u.mentorRepository.GetMentor(&mentor, domain.MentorParam{Id: mentorId})
+	if err != nil {
+		return domain.TransactionResponse{}, response.NewError(http.StatusNotFound, "an error occured when create transaction", err)
+	}
+
 	//Null value for Payed_At
 	layoutFormat := "2006-01-02 15:04:05"
 	nullTime, err := time.Parse(layoutFormat, "1970-01-01 00:00:01")
@@ -51,7 +59,7 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId uuid.UUI
 	newTransaction := domain.Transactions{
 		Id:          uuid.New(),
 		UserId:      user.Id,
-		MentorId:    mentorId,
+		MentorId:    mentor.Id,
 		Price:       transactionRequest.Price,
 		PaymentType: transactionRequest.PaymentType,
 		PayedAt:     nullTime,
@@ -74,8 +82,8 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId uuid.UUI
 
 func generateTransactionResponse(transactionRequest domain.TransactionRequest, coreApiRes *coreapi.ChargeResponse) domain.TransactionResponse {
 	transactionResponse := domain.TransactionResponse{
-		TransactionId: coreApiRes.TransactionID,
-		PaymentType:   transactionRequest.PaymentType,
+		OrderId:     coreApiRes.OrderID,
+		PaymentType: transactionRequest.PaymentType,
 	}
 
 	if transactionRequest.PaymentType == "gopay" {

@@ -29,7 +29,7 @@ type MentorRequest struct {
 }
 
 type MentorParam struct {
-	MentorId uuid.UUID `json:"-"`
+	Id uuid.UUID `json:"-"`
 }
 
 type MentorUpdate struct {

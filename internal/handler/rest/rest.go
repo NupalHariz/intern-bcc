@@ -105,18 +105,3 @@ func (r *Rest) Run() {
 		log.Fatal("failed to run router")
 	}
 }
-
-// // domain driven design
-// -- app
-// -- -- user
-// -- -- -- repository
-// -- -- -- usecase
-// -- -- -- handler
-
-// // event driven design
-// -- repository
-// -- -- user repo
-// -- usecase
-// -- -- user uc
-// -- handler
-// -- -- user handler

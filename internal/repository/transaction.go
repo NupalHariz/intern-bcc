@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type ITransactionRepository interface{
+type ITransactionRepository interface {
 	GetTransaction(transaction *domain.Transactions) error
 	CreateTransaction(newTransaction *domain.Transactions) error
 	UpdateTransaction(transaction *domain.Transactions) error
@@ -30,8 +30,8 @@ func (r *TransactionsRepository) GetTransaction(transaction *domain.Transactions
 }
 
 func (r *TransactionsRepository) CreateTransaction(newTransaction *domain.Transactions) error {
-	err := r.db.Debug().Create(newTransaction).Error
-	if err != nil{
+	err := r.db.Create(newTransaction).Error
+	if err != nil {
 		return err
 	}
 

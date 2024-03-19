@@ -218,7 +218,7 @@ func (u *UserUsecase) UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate do
 		return domain.Users{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated user", err)
 	}
 
-	return user, nil
+	return updatedUser, nil
 }
 
 func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) (domain.Users, error) {
@@ -310,6 +310,10 @@ func (u *UserUsecase) ChangePassword(ctx context.Context, name string, verPass s
 	err = bcrypt.CompareHashAndPassword([]byte(verPassHash), []byte(verPass))
 	if err != nil {
 		return response.NewError(http.StatusBadRequest, "verification code invalid", err)
+	}
+
+	if passwordRequest.Password != passwordRequest.ConfirmPassword {
+		return response.NewError(http.StatusBadRequest, "failed to create new password", errors.New("password and confirm password is different"))
 	}
 
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(passwordRequest.Password), 10)

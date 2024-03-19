@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"intern-bcc/domain"
 
 	"github.com/google/uuid"
@@ -48,7 +47,7 @@ func (r *UserRepository) GetLikeProduct(likedProduct *domain.LikeProduct, likePr
 }
 
 func (r *UserRepository) GetLikeProducts(user *domain.Users, userId uuid.UUID) error {
-	err := r.db.Debug().Model(domain.Users{}).Preload("LikeProduct.Merchant.University").Find(user, "id = ?", userId).Error
+	err := r.db.Model(domain.Users{}).Preload("LikeProduct.Merchant.University").Find(user, "id = ?", userId).Error
 	if err != nil {
 		return err
 	}
@@ -57,7 +56,7 @@ func (r *UserRepository) GetLikeProducts(user *domain.Users, userId uuid.UUID) e
 }
 
 func (r *UserRepository) GetOwnProducts(user *domain.Users, userId uuid.UUID) error {
-	err := r.db.Debug().Preload("Merchant.University").Preload("Merchant.Products").Find(user, "id = ?", userId).Error
+	err := r.db.Preload("Merchant.University").Preload("Merchant.Products").Find(user, "id = ?", userId).Error
 	if err != nil {
 		return err
 	}
@@ -85,12 +84,10 @@ func (r *UserRepository) Register(newUser *domain.Users) error {
 
 func (r *UserRepository) UpdateUser(userUpdate *domain.UserUpdate, userId uuid.UUID) error {
 	var user domain.Users
-	err := r.db.Debug().Model(&user).Where("id = ?", userId).Updates(userUpdate).Error
+	err := r.db.Model(&user).Where("id = ?", userId).Updates(userUpdate).Error
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("\n\n\n%v\n\n\n", user)
 
 	return nil
 }

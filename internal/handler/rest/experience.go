@@ -13,7 +13,7 @@ func (r *Rest) AddExperience(c *gin.Context) {
 	mentorIdString := c.Param("mentorId")
 	mentorId, _ := uuid.Parse(mentorIdString)
 	mentorParam := domain.MentorParam{
-		MentorId: mentorId,
+		Id: mentorId,
 	}
 
 	var experienceRequest domain.ExperienceRequest

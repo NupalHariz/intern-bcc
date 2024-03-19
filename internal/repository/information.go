@@ -33,7 +33,7 @@ func (r *InformationRepository) GetArticles(articles *[]domain.Articles) error {
 }
 
 func (r *InformationRepository) GetWebinarNCompetition(webinarNCompetition *[]domain.Information) error {
-	err := r.db.Debug().Model(domain.Information{}).Where("category_id IN (?)", []int64{8, 9}).Limit(15).Order("created_at desc").Preload("Category").Find(webinarNCompetition).Error
+	err := r.db.Model(domain.Information{}).Where("category_id IN (?)", []int64{8, 9}).Limit(15).Order("created_at desc").Preload("Category").Find(webinarNCompetition).Error
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (r *InformationRepository) GetWebinarNCompetition(webinarNCompetition *[]do
 
 func (r *InformationRepository) GetInformation(information *domain.Information, informationParam domain.InformationParam) error {
 	fmt.Println(informationParam)
-	err := r.db.Debug().First(information, informationParam).Error
+	err := r.db.First(information, informationParam).Error
 	if err != nil {
 		return nil
 	}
@@ -65,7 +65,7 @@ func (r *InformationRepository) CreateInformation(newInformation *domain.Informa
 }
 
 func (r *InformationRepository) UpdateInformation(information *domain.InformationUpdate, informationId int) error {
-	err := r.db.Where("id = ?", informationId).Updates(information).Error
+	err := r.db.Model(domain.Information{}).Where("id = ?", informationId).Updates(information).Error
 	if err != nil {
 		return err
 	}

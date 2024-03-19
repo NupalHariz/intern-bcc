@@ -40,7 +40,7 @@ func (r *MerchantRepository) CreateMerchant(newMerchant *domain.Merchants) error
 }
 
 func (r *MerchantRepository) UpdateMerchant(updateMerchant *domain.UpdateMerchant, merchantId uuid.UUID) error {
-	err := r.db.Debug().Where("id = ?", merchantId).Updates(updateMerchant).Error
+	err := r.db.Model(domain.Merchants{}).Where("id = ?", merchantId).Updates(updateMerchant).Error
 	if err != nil {
 		return err
 	}

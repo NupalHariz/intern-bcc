@@ -6,14 +6,19 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (r *Rest) GetMentor(c *gin.Context) {
-	var mentorParam domain.MentorParam
-	err := c.ShouldBind(&mentorParam)
+	mentorIdString := c.Param("mentorId")
+	mentorId, err := uuid.Parse(mentorIdString)
 	if err != nil {
-		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing string to uuid", err))
 		return
+	}
+
+	mentorParam := domain.MentorParam{
+		Id: mentorId,
 	}
 
 	mentor, err := r.usecase.MentorUsecase.GetMentor(mentorParam)
@@ -53,11 +58,15 @@ func (r *Rest) CreateMentor(c *gin.Context) {
 }
 
 func (r *Rest) UpdateMentor(c *gin.Context) {
-	var mentorParam domain.MentorParam
-	err := c.ShouldBind(&mentorParam)
+	mentorIdString := c.Param("mentorId")
+	mentorId, err := uuid.Parse(mentorIdString)
 	if err != nil {
-		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing string to uuid", err))
 		return
+	}
+
+	mentorParam := domain.MentorParam{
+		Id: mentorId,
 	}
 
 	var mentorUpdate domain.MentorUpdate
@@ -73,15 +82,19 @@ func (r *Rest) UpdateMentor(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "succes create mentor", nil)
+	response.Success(c, "succes update mentor", nil)
 }
 
 func (r *Rest) UploadMentorPicture(c *gin.Context) {
-	var mentorParam domain.MentorParam
-	err := c.ShouldBind(&mentorParam)
+	mentorIdString := c.Param("mentorId")
+	mentorId, err := uuid.Parse(mentorIdString)
 	if err != nil {
-		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing string to uuid", err))
 		return
+	}
+
+	mentorParam := domain.MentorParam{
+		Id: mentorId,
 	}
 
 	mentorPicture, err := c.FormFile("mentor_picture")

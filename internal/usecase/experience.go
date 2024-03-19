@@ -22,7 +22,7 @@ func NewExperienceRepository(experienceRepository repository.IExperienceReposito
 func (u *ExperienceUsecase) AddExperience(experienceRequest domain.ExperienceRequest, mentorParam domain.MentorParam) error {
 	experience := domain.Experiences{
 		Experience: experienceRequest.Experience,
-		MentorId:   mentorParam.MentorId,
+		MentorId:   mentorParam.Id,
 	}
 
 	err := u.experienceRepository.AddExperience(&experience)

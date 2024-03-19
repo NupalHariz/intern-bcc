@@ -154,7 +154,7 @@ func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.Pro
 	}
 
 	var category domain.Categories
-	err = u.categoryRepository.GetCategory(&category, domain.Categories{Category: productRequest.Category})
+	err = u.categoryRepository.GetCategory(&category, domain.Categories{Id: productRequest.Category})
 	if err != nil {
 		return response.NewError(http.StatusNotFound, "category not found", err)
 	}
@@ -193,6 +193,16 @@ func (u *ProductUsecase) UpdateProduct(c *gin.Context, productId uuid.UUID, upda
 		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "an error occured when get product", err)
 	}
 
+	var category domain.Categories
+	err = u.categoryRepository.GetCategory(&category, domain.Categories{Id: updateProduct.Category})
+	if err != nil {
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusNotFound, "category not found", err)
+	}
+
+	if category.Id > 6 {
+		return domain.ProductProfileResponse{}, response.NewError(http.StatusBadRequest, "can no use this category for product", errors.New("can not use information category"))
+	}
+
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err != nil {
@@ -215,12 +225,12 @@ func (u *ProductUsecase) UpdateProduct(c *gin.Context, productId uuid.UUID, upda
 	}
 
 	updatedProductResponse := domain.ProductProfileResponse{
-		Id: updatedProduct.Id,
-		Name: updatedProduct.Name,
-		Description: updatedProduct.Description,
-		Price: updatedProduct.Price,
+		Id:           updatedProduct.Id,
+		Name:         updatedProduct.Name,
+		Description:  updatedProduct.Description,
+		Price:        updatedProduct.Price,
 		ProductPhoto: updatedProduct.ProductPhoto,
-		Category: updatedProduct.Category.Category,
+		Category:     updatedProduct.Category.Category,
 	}
 
 	return updatedProductResponse, nil
@@ -275,12 +285,13 @@ func (u *ProductUsecase) UploadProductPhoto(c *gin.Context, productId uuid.UUID,
 	}
 
 	updatedProductResponse := domain.ProductProfileResponse{
-		Id: updatedProduct.Id,
-		Name: updatedProduct.Name,
-		Description: updatedProduct.Description,
-		Price: updatedProduct.Price,
+		Id:           updatedProduct.Id,
+		Name:         updatedProduct.Name,
+		Description:  updatedProduct.Description,
+		Price:        updatedProduct.Price,
 		ProductPhoto: updatedProduct.ProductPhoto,
-		Category: updatedProduct.Category.Category,
+		Category:     updatedProduct.Category.Category,
 	}
 
-	return updatedProductResponse, nil}
+	return updatedProductResponse, nil
+}

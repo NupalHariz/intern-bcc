@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
@@ -9,16 +10,17 @@ import (
 )
 
 func (r *Rest) CreateCategory(c *gin.Context) {
-	var category domain.CategoryRequest
+	var categoryRequest domain.CategoryRequest
 
-	err := c.ShouldBindJSON(&category)
+	err := c.ShouldBindJSON(&categoryRequest)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
-	err = r.usecase.CategoryUsecase.CreateCategory(category)
+	err = r.usecase.CategoryUsecase.CreateCategory(categoryRequest)
 	if err != nil {
+		fmt.Println(err, "error handler")
 		response.Failed(c, err)
 		return
 	}

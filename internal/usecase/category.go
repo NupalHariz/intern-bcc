@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/response"
@@ -23,7 +24,7 @@ func (u *CategoryUsecase) CreateCategory(categoryRequest domain.CategoryRequest)
 	var category domain.Categories
 	err := u.categoryRepository.GetCategory(&category, domain.Categories{Category: categoryRequest.Category})
 	if err == nil {
-		return response.NewError(http.StatusBadRequest, "category already exist", err)
+		return response.NewError(http.StatusBadRequest, "category already exist", errors.New("can not make same category"))
 	}
 
 	newCategory := domain.Categories{
