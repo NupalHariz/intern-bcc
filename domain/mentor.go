@@ -8,7 +8,7 @@ import (
 )
 
 type Mentors struct {
-	Id            uuid.UUID      `json:"-" gorm:"type:varchar(36);primary key"`
+	Id            uuid.UUID      `json:"id" gorm:"type:varchar(36);primary key"`
 	Name          string         `json:"name" gorm:"unique"`
 	CurrentJob    string         `json:"current_job"`
 	Description   string         `json:"description"`

@@ -18,7 +18,7 @@ type Products struct {
 	CreatedAt    time.Time  `json:"-"`
 	UpdatedAt    time.Time  `json:"-"`
 	LikeByUser   []Users    `json:"-" gorm:"many2many:user_like_product;foreignKey:id;joinForeignKey:product_id;references:id;joinReferences:user_id"`
-	Merchant     Merchants  `json:"-"`
+	Merchant     Merchants  `json:"merchant"`
 	Category     Categories `json:"category"`
 }
 

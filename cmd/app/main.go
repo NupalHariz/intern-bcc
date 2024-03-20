@@ -6,11 +6,11 @@ import (
 	"intern-bcc/internal/usecase"
 	"intern-bcc/pkg/gomail"
 	"intern-bcc/pkg/infrastucture"
-	"intern-bcc/pkg/infrastucture/cache"
 	"intern-bcc/pkg/infrastucture/database"
 	"intern-bcc/pkg/jwt"
 	"intern-bcc/pkg/middleware"
 	"intern-bcc/pkg/midtrans"
+	"intern-bcc/pkg/redis"
 	"intern-bcc/pkg/supabase"
 	"log"
 	"os"
@@ -25,18 +25,19 @@ func main() {
 	if err != nil && env == "" {
 		log.Fatal("error loading .env file")
 	}
-	cache.ConnectToRedis()
+	redis.ConnectToRedis()
 	database.ConnectToDB()
 	database.Migrate()
-
-	//Repository
-	repository := repository.NewRepository(database.DB, cache.RDB)
 
 	//pkg
 	jwt := jwt.JwtInit()
 	goMail := gomail.GoMailInit()
 	midTrans := midtrans.MidTransInit()
 	supabase := supabase.SupabaseInit()
+	redis := redis.RedisInit(redis.RDB)
+
+	//Repository
+	repository := repository.NewRepository(database.DB, repository.RepositoryParam{Redis: redis})
 
 	//Usecase
 	usecase := usecase.NewUsecase(usecase.UsecaseParam{

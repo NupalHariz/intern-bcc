@@ -31,13 +31,15 @@ func (r *Rest) GetMentor(c *gin.Context) {
 }
 
 func (r *Rest) GetMentors(c *gin.Context) {
-	mentors, err := r.usecase.MentorUsecase.GetMentors()
+	ctx := c.Request.Context()
+
+	mentors, err := r.usecase.MentorUsecase.GetMentors(ctx)
 	if err != nil {
 		response.Failed(c, err)
 		return
 	}
 
-	response.Success(c, "succes create mentor", mentors)
+	response.Success(c, "succes get mentor", mentors)
 }
 
 func (r *Rest) CreateMentor(c *gin.Context) {

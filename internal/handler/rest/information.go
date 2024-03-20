@@ -10,7 +10,8 @@ import (
 )
 
 func (r *Rest) GetInformations(c *gin.Context) {
-	informations, err := r.usecase.InformationUsecase.GetInformations()
+	ctx := c.Request.Context()
+	informations, err := r.usecase.InformationUsecase.GetInformations(ctx)
 	if err != nil {
 		response.Failed(c, err)
 		return

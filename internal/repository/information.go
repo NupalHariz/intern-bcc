@@ -1,48 +1,74 @@
 package repository
 
 import (
-	"fmt"
+	"context"
+
 	"intern-bcc/domain"
+	"log"
+
+	"intern-bcc/pkg/redis"
 
 	"gorm.io/gorm"
 )
 
 type IInformationRepository interface {
-	GetArticles(articles *[]domain.Articles) error
-	GetWebinarNCompetition(webinarNCompetition *[]domain.Information) error
+	GetArticles(ctx context.Context, articles *[]domain.Articles) error
+	GetWebinarNCompetition(ctx context.Context, webinarNCompetition *[]domain.Information) error
 	GetInformation(information *domain.Information, informationParam domain.InformationParam) error
 	CreateInformation(newInformation *domain.Information) error
 	UpdateInformation(information *domain.InformationUpdate, informationId int) error
 }
 
 type InformationRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	redis redis.IRedis
 }
 
-func NewInformationRepository(db *gorm.DB) IInformationRepository {
-	return &InformationRepository{db}
+func NewInformationRepository(db *gorm.DB, redis redis.IRedis) IInformationRepository {
+	return &InformationRepository{db, redis}
 }
 
-func (r *InformationRepository) GetArticles(articles *[]domain.Articles) error {
-	err := r.db.Model(domain.Information{}).Where("category_id = ?", 7).Order("created_at desc").Limit(15).Find(articles).Error
+func (r *InformationRepository) GetArticles(ctx context.Context, articles *[]domain.Articles) error {
+	result, err := r.redis.GetArticles(ctx, "Articles")
 	if err != nil {
-		return err
+		err = r.db.Model(domain.Information{}).Where("category_id = ?", 7).Order("created_at desc").Limit(15).Find(articles).Error
+		if err != nil {
+			return err
+		}
+
+		err = r.redis.SetInformationNmentor(ctx, "Articles", *articles)
+		if err != nil {
+			log.Printf("error redis %v", err)
+		}
+
+		return nil
 	}
 
+	*articles = result
 	return nil
 }
 
-func (r *InformationRepository) GetWebinarNCompetition(webinarNCompetition *[]domain.Information) error {
-	err := r.db.Model(domain.Information{}).Where("category_id IN (?)", []int64{8, 9}).Limit(15).Order("created_at desc").Preload("Category").Find(webinarNCompetition).Error
+func (r *InformationRepository) GetWebinarNCompetition(ctx context.Context, webinarNCompetition *[]domain.Information) error {
+	result, err := r.redis.GetWebinarNCompetition(ctx, "WebinarNCompetition")
 	if err != nil {
-		return err
+		err := r.db.Model(domain.Information{}).Where("category_id IN (?)", []int64{8, 9}).Limit(15).Order("created_at desc").Preload("Category").Find(webinarNCompetition).Error
+		if err != nil {
+			return err
+		}
+
+		err = r.redis.SetInformationNmentor(ctx, "WebinarNCompetition", *webinarNCompetition)
+		if err != nil {
+			log.Printf("error redis %v", err)
+		}
+
+		return nil
 	}
 
+	*webinarNCompetition = result
 	return nil
 }
 
 func (r *InformationRepository) GetInformation(information *domain.Information, informationParam domain.InformationParam) error {
-	fmt.Println(informationParam)
 	err := r.db.First(information, informationParam).Error
 	if err != nil {
 		return nil

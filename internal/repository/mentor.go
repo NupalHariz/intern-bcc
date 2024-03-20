@@ -1,7 +1,10 @@
 package repository
 
 import (
+	"context"
 	"intern-bcc/domain"
+	"intern-bcc/pkg/redis"
+	"log"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -9,17 +12,18 @@ import (
 
 type IMentorRepository interface {
 	GetMentor(mentor *domain.Mentors, mentorParam domain.MentorParam) error
-	GetMentors(mentors *[]domain.Mentors) error
+	GetMentors(ctx context.Context, mentors *[]domain.Mentors) error
 	CreateMentor(newMentor *domain.Mentors) error
 	UpdateMentor(mentor *domain.MentorUpdate, mentorId uuid.UUID) error
 }
 
 type MentorRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	redis redis.IRedis
 }
 
-func NewMentorRepository(db *gorm.DB) IMentorRepository {
-	return &MentorRepository{db}
+func NewMentorRepository(db *gorm.DB, redis redis.IRedis) IMentorRepository {
+	return &MentorRepository{db, redis}
 }
 
 func (r *MentorRepository) GetMentor(mentor *domain.Mentors, mentorParam domain.MentorParam) error {
@@ -35,12 +39,23 @@ func (r *MentorRepository) GetMentor(mentor *domain.Mentors, mentorParam domain.
 	return nil
 }
 
-func (r *MentorRepository) GetMentors(mentors *[]domain.Mentors) error {
-	err := r.db.Limit(15).Order("created_at desc").Find(mentors).Error
+func (r *MentorRepository) GetMentors(ctx context.Context, mentors *[]domain.Mentors) error {
+	result, err := r.redis.GetMentors(ctx, "Mentors")
 	if err != nil {
-		return err
+		err = r.db.Limit(15).Order("created_at desc").Find(mentors).Error
+		if err != nil {
+			return err
+		}
+
+		err = r.redis.SetInformationNmentor(ctx, "Mentors", *mentors)
+		if err != nil {
+			log.Fatalf("redis error %v", err)
+		}
+
+		return nil
 	}
 
+	*mentors = result
 	return nil
 }
 

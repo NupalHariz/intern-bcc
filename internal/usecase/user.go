@@ -7,6 +7,7 @@ import (
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/gomail"
 	"intern-bcc/pkg/jwt"
+	"intern-bcc/pkg/redis"
 	"intern-bcc/pkg/response"
 	"intern-bcc/pkg/supabase"
 	"math/rand"
@@ -42,12 +43,12 @@ type UserUsecase struct {
 	productRepository repository.IProductRepository
 	jwt               jwt.IJwt
 	supabase          supabase.ISupabase
-	redis             repository.IRedis
+	redis             redis.IRedis
 	goMail            gomail.IGoMail
 }
 
 func NewUserUsecase(userRepository repository.IUserRepository, productRepository repository.IProductRepository, jwt jwt.IJwt,
-	supabase supabase.ISupabase, redis repository.IRedis, goMail gomail.IGoMail) IUserUsecase {
+	supabase supabase.ISupabase, redis redis.IRedis, goMail gomail.IGoMail) IUserUsecase {
 	return &UserUsecase{
 		userRepository:    userRepository,
 		productRepository: productRepository,

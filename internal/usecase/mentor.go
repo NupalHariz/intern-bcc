@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
@@ -17,7 +18,7 @@ import (
 
 type IMentorUsecase interface {
 	GetMentor(mentorParam domain.MentorParam) (domain.MentorResponse, error)
-	GetMentors() ([]domain.MentorResponses, error)
+	GetMentors(ctx context.Context) ([]domain.MentorResponses, error)
 	CreateMentor(mentorRequest domain.MentorRequest) error
 	UpdateMentor(mentorParam domain.MentorParam, mentorUpdate domain.MentorUpdate) error
 	UploadMentorPhoto(mentorParam domain.MentorParam, mentorPicture *multipart.FileHeader) error
@@ -62,9 +63,9 @@ func (u *MentorUsecase) GetMentor(mentorParam domain.MentorParam) (domain.Mentor
 	return mentorResponse, nil
 }
 
-func (u *MentorUsecase) GetMentors() ([]domain.MentorResponses, error) {
+func (u *MentorUsecase) GetMentors(ctx context.Context) ([]domain.MentorResponses, error) {
 	var mentors []domain.Mentors
-	err := u.mentorRepository.GetMentors(&mentors)
+	err := u.mentorRepository.GetMentors(ctx, &mentors)
 	if err != nil {
 		return []domain.MentorResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get mentors", err)
 	}

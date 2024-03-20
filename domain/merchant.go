@@ -10,7 +10,7 @@ import (
 type Merchants struct {
 	Id            uuid.UUID    `json:"id" gorm:"type:varchar(36);unique"`
 	UserId        uuid.UUID    `json:"-" gorm:"type:varchar(36);unique"`
-	MerchantName  string       `json:"store_name"`
+	MerchantName  string       `json:"merhcant_name"`
 	UniversityId  int          `json:"-"`
 	Faculty       string       `json:"faculty"`
 	ProvinceId    int          `json:"-"`
@@ -22,7 +22,7 @@ type Merchants struct {
 	CreatedAt     time.Time    `json:"-"`
 	UpdatedAt     time.Time    `json:"-"`
 	Products      []Products   `json:"-" gorm:"foreignKey:merchant_id;references:id"`
-	University    Universities `json:"-"`
+	University    Universities `json:"University"`
 	Province      Province     `json:"-"`
 }
 

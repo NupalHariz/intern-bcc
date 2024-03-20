@@ -1,7 +1,10 @@
 package repository
 
 import (
+	"context"
 	"intern-bcc/domain"
+	"intern-bcc/pkg/redis"
+	"log"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -9,35 +12,47 @@ import (
 
 type IProductRepository interface {
 	GetProduct(product *domain.Products, productParam domain.ProductParam) error
-	GetProducts(product *[]domain.Products, productParam domain.ProductParam) error
+	GetProducts(ctx context.Context, product *[]domain.Products, productParam domain.ProductParam) error
 	GetTotalProduct(totalProduct *int64) error
 	CreateProduct(newProduct *domain.Products) error
 	UpdateProduct(product *domain.ProductUpdate, productId uuid.UUID) error
 }
 
 type ProductRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	redis redis.IRedis
 }
 
-func NewProductRepository(db *gorm.DB) IProductRepository {
-	return &ProductRepository{db}
+func NewProductRepository(db *gorm.DB, redis redis.IRedis) IProductRepository {
+	return &ProductRepository{db, redis}
 }
 
-func (r *ProductRepository) GetProducts(product *[]domain.Products, productParam domain.ProductParam) error {
-	err := r.db.
-		Joins("JOIN merchants ON merchants.id = products.merchant_id").
-		Joins("JOIN universities ON universities.id = merchants.university_id").
-		Joins("JOIN provinces ON provinces.id = merchants.province_id").
-		Where("IF(? != 0, universities.id = ?, 1) AND IF(? != 0, provinces.id = ?, 1)", productParam.UniversityId, productParam.UniversityId, productParam.ProvinceId, productParam.ProvinceId).
-		Limit(6).
-		Offset(productParam.Offset).
-		Preload("Merchant.University").
-		Preload("Merchant.Province").
-		Find(&product, productParam).Error
+func (r *ProductRepository) GetProducts(ctx context.Context, product *[]domain.Products, productParam domain.ProductParam) error {
+	result, err := r.redis.GetAllProdoucts(ctx, productParam)
 	if err != nil {
-		return err
+		err = r.db.
+			Joins("JOIN merchants ON merchants.id = products.merchant_id").
+			Joins("JOIN universities ON universities.id = merchants.university_id").
+			Joins("JOIN provinces ON provinces.id = merchants.province_id").
+			Where("IF(? != 0, universities.id = ?, 1) AND IF(? != 0, provinces.id = ?, 1)", productParam.UniversityId, productParam.UniversityId, productParam.ProvinceId, productParam.ProvinceId).
+			Limit(6).
+			Offset(productParam.Offset).
+			Preload("Merchant.University").
+			Preload("Merchant.Province").
+			Find(&product, productParam).Error
+		if err != nil {
+			return err
+		}
+
+		err = r.redis.SetAllProducts(ctx, productParam, *product)
+		if err != nil {
+			log.Printf("redis error %v", err)
+		}
+
+		return nil
 	}
 
+	*product = result
 	return nil
 }
 

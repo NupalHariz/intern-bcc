@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"intern-bcc/domain"
@@ -14,7 +15,7 @@ import (
 )
 
 type IInformationUsecase interface {
-	GetInformations() (domain.InformationResponses, error)
+	GetInformations(ctx context.Context) (domain.InformationResponses, error)
 	GetArticle(informationParam domain.InformationParam) (domain.Article, error)
 	CreateInformation(informationRequest domain.InformationRequest) error
 	UpdateInformation(informationParam domain.InformationParam, informationUpdate domain.InformationUpdate) error
@@ -36,15 +37,15 @@ func NewInformatinUsecase(informationRepository repository.IInformationRepositor
 	}
 }
 
-func (u *InformationUsecase) GetInformations() (domain.InformationResponses, error) {
+func (u *InformationUsecase) GetInformations(ctx context.Context) (domain.InformationResponses, error) {
 	var articles []domain.Articles
-	err := u.informationRepository.GetArticles(&articles)
+	err := u.informationRepository.GetArticles(ctx, &articles)
 	if err != nil {
 		return domain.InformationResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get information", err)
 	}
 
 	var otherInformation []domain.Information
-	err = u.informationRepository.GetWebinarNCompetition(&otherInformation)
+	err = u.informationRepository.GetWebinarNCompetition(ctx, &otherInformation)
 	if err != nil {
 		return domain.InformationResponses{}, response.NewError(http.StatusInternalServerError, "an error occured when get information", err)
 	}

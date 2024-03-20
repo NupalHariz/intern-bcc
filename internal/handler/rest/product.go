@@ -75,6 +75,8 @@ func (r *Rest) UploadProductPhoto(c *gin.Context) {
 }
 
 func (r *Rest) GetProducts(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	var productParam domain.ProductParam
 	err := c.ShouldBind(&productParam)
 	if err != nil {
@@ -82,7 +84,7 @@ func (r *Rest) GetProducts(c *gin.Context) {
 		return
 	}
 
-	products, err := r.usecase.ProductUsecase.GetProducts(productParam)
+	products, err := r.usecase.ProductUsecase.GetProducts(ctx, productParam)
 	if err != nil {
 		response.Failed(c, err)
 		return

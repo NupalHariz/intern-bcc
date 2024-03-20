@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"intern-bcc/domain"
@@ -20,7 +21,7 @@ import (
 
 type IProductUsecase interface {
 	GetProduct(productParam domain.ProductParam) (domain.ProductResponse, error)
-	GetProducts(productParam domain.ProductParam) ([]domain.ProductResponses, error)
+	GetProducts(ctx context.Context, productParam domain.ProductParam) ([]domain.ProductResponses, error)
 	GetOwnProduct(productParam domain.ProductParam) (domain.ProductProfileResponse, error)
 	CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error
 	UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.ProductProfileResponse, error)
@@ -75,7 +76,7 @@ func (u *ProductUsecase) GetProduct(productParam domain.ProductParam) (domain.Pr
 	return productResponse, nil
 }
 
-func (u *ProductUsecase) GetProducts(productParam domain.ProductParam) ([]domain.ProductResponses, error) {
+func (u *ProductUsecase) GetProducts(ctx context.Context, productParam domain.ProductParam) ([]domain.ProductResponses, error) {
 	if productParam.Page <= 0 {
 		productParam.Page = 1
 	}
@@ -95,8 +96,7 @@ func (u *ProductUsecase) GetProducts(productParam domain.ProductParam) ([]domain
 	}
 
 	var products []domain.Products
-	fmt.Println(productParam)
-	err = u.productRepository.GetProducts(&products, productParam)
+	err = u.productRepository.GetProducts(ctx, &products, productParam)
 	if err != nil {
 		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "failed", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/gomail"
 	"intern-bcc/pkg/jwt"
+	"intern-bcc/pkg/redis"
 	"intern-bcc/pkg/response"
 	"intern-bcc/pkg/supabase"
 	"math/rand"
@@ -31,7 +32,7 @@ type IMerchantUsecase interface {
 }
 
 type MerchantUsecase struct {
-	redis                repository.IRedis
+	redis                redis.IRedis
 	merchantRepository   repository.IMerchantRepository
 	provinceRepository   repository.IProvinceRepository
 	universityRepository repository.IUniversityRepository
@@ -40,7 +41,7 @@ type MerchantUsecase struct {
 	supabase             supabase.ISupabase
 }
 
-func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, redis repository.IRedis,
+func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, redis redis.IRedis,
 	jwt jwt.IJwt, goMail gomail.IGoMail, supabase supabase.ISupabase,
 	universityRepository repository.IUniversityRepository, provinceRepository repository.IProvinceRepository) IMerchantUsecase {
 	return &MerchantUsecase{
