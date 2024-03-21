@@ -2,17 +2,20 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/pkg/redis"
-	"log"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type IProductRepository interface {
 	GetProduct(product *domain.Products, productParam domain.ProductParam) error
-	GetProducts(ctx context.Context, product *[]domain.Products, productParam domain.ProductParam) error
+	GetProducts(c *gin.Context, ctx context.Context, product *[]domain.Products, productParam domain.ProductParam) error
 	GetTotalProduct(totalProduct *int64) error
 	CreateProduct(newProduct *domain.Products) error
 	UpdateProduct(product *domain.ProductUpdate, productId uuid.UUID) error
@@ -27,10 +30,11 @@ func NewProductRepository(db *gorm.DB, redis redis.IRedis) IProductRepository {
 	return &ProductRepository{db, redis}
 }
 
-func (r *ProductRepository) GetProducts(ctx context.Context, product *[]domain.Products, productParam domain.ProductParam) error {
-	result, err := r.redis.GetAllProdoucts(ctx, productParam)
+func (r *ProductRepository) GetProducts(c *gin.Context, ctx context.Context, product *[]domain.Products, productParam domain.ProductParam) error {
+	key := fmt.Sprintf(KeySetProducts, productParam.Page, productParam.Name, productParam.ProvinceId, productParam.UniversityId, productParam.CategoryId)
+	stringData, err := r.redis.GetRedis(ctx, key)
 	if err != nil {
-		err = r.db.
+		err := r.db.
 			Joins("JOIN merchants ON merchants.id = products.merchant_id").
 			Joins("JOIN universities ON universities.id = merchants.university_id").
 			Joins("JOIN provinces ON provinces.id = merchants.province_id").
@@ -44,15 +48,22 @@ func (r *ProductRepository) GetProducts(ctx context.Context, product *[]domain.P
 			return err
 		}
 
-		err = r.redis.SetAllProducts(ctx, productParam, *product)
+		byteProduct, err := json.Marshal(product)
 		if err != nil {
-			log.Printf("redis error %v", err)
+			return err
 		}
 
+		err = r.redis.SetRedis(ctx, key, string(byteProduct), 5*time.Minute)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
-	*product = result
+	err = json.Unmarshal([]byte(stringData), &product)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

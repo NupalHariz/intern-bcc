@@ -21,7 +21,7 @@ import (
 
 type IProductUsecase interface {
 	GetProduct(productParam domain.ProductParam) (domain.ProductResponse, error)
-	GetProducts(ctx context.Context, productParam domain.ProductParam) ([]domain.ProductResponses, error)
+	GetProducts(c *gin.Context, ctx context.Context, productParam domain.ProductParam) ([]domain.ProductResponses, error)
 	GetOwnProduct(productParam domain.ProductParam) (domain.ProductProfileResponse, error)
 	CreateProduct(c *gin.Context, productRequest domain.ProductRequest) error
 	UpdateProduct(c *gin.Context, productId uuid.UUID, updateProduct domain.ProductUpdate) (domain.ProductProfileResponse, error)
@@ -76,7 +76,7 @@ func (u *ProductUsecase) GetProduct(productParam domain.ProductParam) (domain.Pr
 	return productResponse, nil
 }
 
-func (u *ProductUsecase) GetProducts(ctx context.Context, productParam domain.ProductParam) ([]domain.ProductResponses, error) {
+func (u *ProductUsecase) GetProducts(c *gin.Context, ctx context.Context, productParam domain.ProductParam) ([]domain.ProductResponses, error) {
 	if productParam.Page <= 0 {
 		productParam.Page = 1
 	}
@@ -96,9 +96,10 @@ func (u *ProductUsecase) GetProducts(ctx context.Context, productParam domain.Pr
 	}
 
 	var products []domain.Products
-	err = u.productRepository.GetProducts(ctx, &products, productParam)
+
+	err = u.productRepository.GetProducts(c, ctx, &products, productParam)
 	if err != nil {
-		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "failed", err)
+		return []domain.ProductResponses{}, response.NewError(http.StatusInternalServerError, "failed to get products", err)
 	}
 
 	var productResponses []domain.ProductResponses
@@ -146,7 +147,7 @@ func (u *ProductUsecase) CreateProduct(c *gin.Context, productRequest domain.Pro
 	var merchant domain.Merchants
 	err = u.merchantRepository.GetMerchant(&merchant, domain.MerchantParam{UserId: user.Id})
 	if err != nil {
-		return response.NewError(http.StatusNotFound, "an er", err)
+		return response.NewError(http.StatusNotFound, "an error occured when get merchant", err)
 	}
 
 	if !merchant.IsActive {

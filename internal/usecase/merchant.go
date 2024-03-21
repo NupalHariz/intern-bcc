@@ -8,7 +8,6 @@ import (
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/gomail"
 	"intern-bcc/pkg/jwt"
-	"intern-bcc/pkg/redis"
 	"intern-bcc/pkg/response"
 	"intern-bcc/pkg/supabase"
 	"math/rand"
@@ -32,7 +31,6 @@ type IMerchantUsecase interface {
 }
 
 type MerchantUsecase struct {
-	redis                redis.IRedis
 	merchantRepository   repository.IMerchantRepository
 	provinceRepository   repository.IProvinceRepository
 	universityRepository repository.IUniversityRepository
@@ -41,11 +39,10 @@ type MerchantUsecase struct {
 	supabase             supabase.ISupabase
 }
 
-func NewMerchantUsecase(merchantRepository repository.IMerchantRepository, redis redis.IRedis,
+func NewMerchantUsecase(merchantRepository repository.IMerchantRepository,
 	jwt jwt.IJwt, goMail gomail.IGoMail, supabase supabase.ISupabase,
 	universityRepository repository.IUniversityRepository, provinceRepository repository.IProvinceRepository) IMerchantUsecase {
 	return &MerchantUsecase{
-		redis:                redis,
 		merchantRepository:   merchantRepository,
 		provinceRepository:   provinceRepository,
 		universityRepository: universityRepository,
@@ -68,14 +65,14 @@ func (u *MerchantUsecase) GetMerchant(c *gin.Context) (domain.MerchantProfileRes
 	}
 
 	merchantResponse := domain.MerchantProfileResponse{
-		Id: merchant.Id,
-		MerchantName: merchant.MerchantName,
-		Province: merchant.Province.Province,
-		City: merchant.City,
-		University: merchant.University.University,
-		Faculty: merchant.Faculty,
-		PhoneNumber: merchant.PhoneNumber,
-		Instagram: merchant.Instagram,
+		Id:            merchant.Id,
+		MerchantName:  merchant.MerchantName,
+		Province:      merchant.Province.Province,
+		City:          merchant.City,
+		University:    merchant.University.University,
+		Faculty:       merchant.Faculty,
+		PhoneNumber:   merchant.PhoneNumber,
+		Instagram:     merchant.Instagram,
 		MerchantPhoto: merchant.MerchantPhoto,
 	}
 
@@ -164,7 +161,7 @@ func (u *MerchantUsecase) SendOtp(c *gin.Context, ctx context.Context) error {
 	otp := rand.Intn(999999-100000) + 100000
 	otpString := strconv.Itoa(otp)
 
-	err = u.redis.SetOTP(ctx, user.Id, otpString)
+	err = u.merchantRepository.CreateOTP(ctx, user.Id, otpString)
 	if err != nil {
 		return response.NewError(http.StatusInternalServerError, "an error occured when make otp", err)
 	}
@@ -188,7 +185,7 @@ func (u *MerchantUsecase) VerifyOtp(c *gin.Context, ctx context.Context, verifyO
 		return response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
-	stringOtp, err := u.redis.GetOTP(ctx, user.Id)
+	stringOtp, err := u.merchantRepository.GetOTP(ctx, user.Id)
 	if err != nil {
 		return response.NewError(http.StatusInternalServerError, "an error occured when get otp", err)
 	}
@@ -240,15 +237,15 @@ func (u *MerchantUsecase) UpdateMerchant(c *gin.Context, merchantId uuid.UUID, u
 		return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated merchant", err)
 	}
 
-	updatedMerchantResponse := domain.MerchantProfileResponse {
-		Id: updatedMerchant.Id,
-		MerchantName: updatedMerchant.MerchantName,
-		Province: updatedMerchant.Province.Province,
-		City: updatedMerchant.City,
-		University: updatedMerchant.University.University,
-		Faculty: updatedMerchant.Faculty,
-		PhoneNumber: updatedMerchant.PhoneNumber,
-		Instagram: updatedMerchant.Instagram,
+	updatedMerchantResponse := domain.MerchantProfileResponse{
+		Id:            updatedMerchant.Id,
+		MerchantName:  updatedMerchant.MerchantName,
+		Province:      updatedMerchant.Province.Province,
+		City:          updatedMerchant.City,
+		University:    updatedMerchant.University.University,
+		Faculty:       updatedMerchant.Faculty,
+		PhoneNumber:   updatedMerchant.PhoneNumber,
+		Instagram:     updatedMerchant.Instagram,
 		MerchantPhoto: updatedMerchant.MerchantPhoto,
 	}
 
@@ -297,15 +294,15 @@ func (u *MerchantUsecase) UploadMerchantPhoto(c *gin.Context, merchantId uuid.UU
 		return domain.MerchantProfileResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated merchant", err)
 	}
 
-	updatedMerchantResponse := domain.MerchantProfileResponse {
-		Id: updatedMerchant.Id,
-		MerchantName: updatedMerchant.MerchantName,
-		Province: updatedMerchant.Province.Province,
-		City: updatedMerchant.City,
-		University: updatedMerchant.University.University,
-		Faculty: updatedMerchant.Faculty,
-		PhoneNumber: updatedMerchant.PhoneNumber,
-		Instagram: updatedMerchant.Instagram,
+	updatedMerchantResponse := domain.MerchantProfileResponse{
+		Id:            updatedMerchant.Id,
+		MerchantName:  updatedMerchant.MerchantName,
+		Province:      updatedMerchant.Province.Province,
+		City:          updatedMerchant.City,
+		University:    updatedMerchant.University.University,
+		Faculty:       updatedMerchant.Faculty,
+		PhoneNumber:   updatedMerchant.PhoneNumber,
+		Instagram:     updatedMerchant.Instagram,
 		MerchantPhoto: updatedMerchant.MerchantPhoto,
 	}
 

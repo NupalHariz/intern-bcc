@@ -2,9 +2,12 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/pkg/redis"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -40,14 +43,20 @@ func (r *MentorRepository) GetMentor(mentor *domain.Mentors, mentorParam domain.
 }
 
 func (r *MentorRepository) GetMentors(ctx context.Context, mentors *[]domain.Mentors) error {
-	result, err := r.redis.GetMentors(ctx, "Mentors")
+	key := fmt.Sprintf(KeySetInformationNmentor, "Mentors")
+	stringMentors, err := r.redis.GetRedis(ctx, key)
 	if err != nil {
 		err = r.db.Limit(15).Order("created_at desc").Find(mentors).Error
 		if err != nil {
 			return err
 		}
 
-		err = r.redis.SetInformationNmentor(ctx, "Mentors", *mentors)
+		byteMentors, err := json.Marshal(mentors)
+		if err != nil {
+			return err
+		}
+
+		err = r.redis.SetRedis(ctx, key, string(byteMentors), 5*time.Minute)
 		if err != nil {
 			log.Fatalf("redis error %v", err)
 		}
@@ -55,7 +64,11 @@ func (r *MentorRepository) GetMentors(ctx context.Context, mentors *[]domain.Men
 		return nil
 	}
 
-	*mentors = result
+	err = json.Unmarshal([]byte(stringMentors), mentors)
+	if err != nil {
+		return nil
+	}
+
 	return nil
 }
 

@@ -84,7 +84,7 @@ func (r *Rest) GetProducts(c *gin.Context) {
 		return
 	}
 
-	products, err := r.usecase.ProductUsecase.GetProducts(ctx, productParam)
+	products, err := r.usecase.ProductUsecase.GetProducts(c, ctx, productParam)
 	if err != nil {
 		response.Failed(c, err)
 		return

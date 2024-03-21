@@ -1,7 +1,6 @@
 package infrastucture
 
 import (
-	"fmt"
 	"intern-bcc/domain"
 	"log"
 
@@ -29,7 +28,6 @@ func SeedData(db *gorm.DB) {
 		log.Fatal("error occured when counting admin: ", err)
 	}
 
-	fmt.Println(totalAdmin)
 	if totalAdmin == 0 {
 		if err := generateAdmin(db); err != nil {
 			log.Fatal("error occured when creating admin: ", err)

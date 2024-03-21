@@ -8,6 +8,7 @@ import (
 	"intern-bcc/pkg/infrastucture"
 	"intern-bcc/pkg/infrastucture/database"
 	"intern-bcc/pkg/jwt"
+	"intern-bcc/pkg/logging"
 	"intern-bcc/pkg/middleware"
 	"intern-bcc/pkg/midtrans"
 	"intern-bcc/pkg/redis"
@@ -35,6 +36,7 @@ func main() {
 	midTrans := midtrans.MidTransInit()
 	supabase := supabase.SupabaseInit()
 	redis := redis.RedisInit(redis.RDB)
+	logging := 	logging.LoggingInit()
 
 	//Repository
 	repository := repository.NewRepository(database.DB, repository.RepositoryParam{Redis: redis})
@@ -46,10 +48,11 @@ func main() {
 		Supabase:   supabase,
 		Midtrans:   midTrans,
 		GoMail:     goMail,
+		Redis:      redis,
 	})
 
 	//Middleware
-	middleware := middleware.MiddlerwareInit(jwt, usecase)
+	middleware := middleware.MiddlerwareInit(jwt, usecase, logging)
 	infrastucture.SeedData(database.DB)
 
 	//Rest

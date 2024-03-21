@@ -25,7 +25,9 @@ func NewRest(c *gin.Engine, usecase *usecase.Usecase, middleware middleware.IMid
 }
 
 func (r *Rest) MountEndpoint() {
-	routerGroup := r.router.Group("api/v1")
+	version := os.Getenv("VERSION")
+	path := fmt.Sprintf("api/%v", version)
+	routerGroup := r.router.Group(path, r.middleware.LogEvent)
 
 	routerGroup.POST("/register", r.Register)
 	routerGroup.POST("/login", r.Login)

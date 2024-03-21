@@ -1,7 +1,11 @@
 package repository
 
 import (
+	"context"
+	"fmt"
 	"intern-bcc/domain"
+	"intern-bcc/pkg/redis"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -18,14 +22,17 @@ type IUserRepository interface {
 	LikeProduct(likeProduct *domain.LikeProduct) error
 	DeleteLikeProduct(likedProduct *domain.LikeProduct) error
 	CreateHasMentor(mentor *domain.HasMentor) error
+	CreatePasswordVerification(ctx context.Context, emailVerHash string, userName string) error
+	GetPasswordVerification(ctx context.Context, userName string) (string, error)
 }
 
 type UserRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	redis redis.IRedis
 }
 
-func NewUserRepository(db *gorm.DB) IUserRepository {
-	return &UserRepository{db}
+func NewUserRepository(db *gorm.DB, redis redis.IRedis) IUserRepository {
+	return &UserRepository{db, redis}
 }
 
 func (r *UserRepository) GetUser(user *domain.Users, param domain.UserParam) error {
@@ -118,3 +125,25 @@ func (r *UserRepository) CreateHasMentor(mentor *domain.HasMentor) error {
 
 	return nil
 }
+
+func (r *UserRepository) CreatePasswordVerification(ctx context.Context, emailVerHash string, userName string) error {
+	key := fmt.Sprintf(KeySetPasswordRecovery, userName)
+	err := r.redis.SetRedis(ctx, key, emailVerHash, 2*time.Minute)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserRepository) GetPasswordVerification(ctx context.Context, userName string) (string, error) {
+	key := fmt.Sprintf(KeySetPasswordRecovery, userName)
+	emailVerHash, err := r.redis.GetRedis(ctx, key)
+	if err != nil {
+		return "", err
+	}
+
+	return emailVerHash, nil
+}
+
+

@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Information struct {
-	Id               int        `json:"-"`
+	Id               int        `json:"id"`
 	Title            string     `json:"title"`
 	CategoryId       int        `json:"-"`
 	Synopsis         string     `json:"synopsis"`
@@ -11,7 +11,7 @@ type Information struct {
 	InformationPhoto string     `json:"information_photo"`
 	CreatedAt        time.Time  `json:"-"`
 	UpdatedAt        time.Time  `json:"-"`
-	Category         Categories `json:"-"`
+	Category         Categories `json:"category"`
 }
 
 type InformationRequest struct {

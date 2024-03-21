@@ -7,7 +7,6 @@ import (
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/gomail"
 	"intern-bcc/pkg/jwt"
-	"intern-bcc/pkg/redis"
 	"intern-bcc/pkg/response"
 	"intern-bcc/pkg/supabase"
 	"math/rand"
@@ -43,18 +42,16 @@ type UserUsecase struct {
 	productRepository repository.IProductRepository
 	jwt               jwt.IJwt
 	supabase          supabase.ISupabase
-	redis             redis.IRedis
 	goMail            gomail.IGoMail
 }
 
 func NewUserUsecase(userRepository repository.IUserRepository, productRepository repository.IProductRepository, jwt jwt.IJwt,
-	supabase supabase.ISupabase, redis redis.IRedis, goMail gomail.IGoMail) IUserUsecase {
+	supabase supabase.ISupabase, goMail gomail.IGoMail) IUserUsecase {
 	return &UserUsecase{
 		userRepository:    userRepository,
 		productRepository: productRepository,
 		jwt:               jwt,
 		supabase:          supabase,
-		redis:             redis,
 		goMail:            goMail,
 	}
 }
@@ -279,19 +276,20 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 		userName = strings.Replace(userName, " ", "-", -1)
 	}
 
-	err = u.redis.SetEmailVerHash(ctx, userName, emailVerHash)
+	err = u.userRepository.CreatePasswordVerification(ctx, emailVerHash, userName)
 	if err != nil {
 		return response.NewError(http.StatusInternalServerError, "error occured when send email", err)
 	}
 
 	address := os.Getenv("APP_ADDRESS")
 	host := os.Getenv("APP_PORT")
+	version := os.Getenv("VERSION")
 	domainName := fmt.Sprintf("%v:%v", address, host)
 
 	subject := "Account Recovery"
 	htmlBody := `<html>
 	<h1>Click Link to Change Password</h1>
-	<h2><a href="http://` + domainName + `/api/v1/` + `recoveryaccount/` + userName + `/` + emailVerPassword + `">click here</a></h2>
+	<h2><a href="http://` + domainName + `/api/` + version + `/recoveryaccount/` + userName + `/` + emailVerPassword + `">click here</a></h2>
 	</html>`
 
 	err = u.goMail.SendGoMail(subject, htmlBody, user.Email)
@@ -303,7 +301,7 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 }
 
 func (u *UserUsecase) ChangePassword(ctx context.Context, name string, verPass string, passwordRequest domain.PasswordUpdate) error {
-	verPassHash, err := u.redis.GetEmailVerHash(ctx, name)
+	verPassHash, err := u.userRepository.GetPasswordVerification(ctx, name)
 	if err != nil {
 		return response.NewError(http.StatusInternalServerError, "an error occured when get ver password from database", err)
 	}

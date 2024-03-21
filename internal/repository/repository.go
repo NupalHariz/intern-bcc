@@ -5,12 +5,18 @@ import (
 	"intern-bcc/pkg/redis"
 )
 
+const (
+	KeySetOtp                = "otp:set:id:%v"
+	KeySetPasswordRecovery   = "recovery:set:name:%v"
+	KeySetInformationNmentor = "get:all:%v"
+	KeySetProducts           = "get:all:product:page:%v:name:%v:province:%v:university:%v:category:%v"
+)
+
 type Repository struct {
 	UserRepository        IUserRepository
 	ProductRepository     IProductRepository
 	TransactionRepository ITransactionRepository
 	MerchantSQLRepository IMerchantRepository
-	// RedisRepository       IRedis
 	MentorRepository      IMentorRepository
 	ExperienceRepository  IExperienceRepository
 	CategoryRepository    ICategoryRepository
@@ -24,11 +30,10 @@ type RepositoryParam struct {
 }
 
 func NewRepository(db *gorm.DB, repositoryParam RepositoryParam) *Repository {
-	userRepository := NewUserRepository(db)
+	userRepository := NewUserRepository(db, repositoryParam.Redis)
 	productRepository := NewProductRepository(db, repositoryParam.Redis)
 	transactionRepository := NewTransactionRepository(db)
-	merchantSQLRepository := NewMerchantRepository(db)
-	// redisRepository := NewRedis(r)
+	merchantSQLRepository := NewMerchantRepository(db, repositoryParam.Redis)
 	mentorRepository := NewMentorRepository(db, repositoryParam.Redis)
 	experienceRepository := NewExperienceRepository(db)
 	categoryRepository := NewCategoryRepository(db)
@@ -41,7 +46,6 @@ func NewRepository(db *gorm.DB, repositoryParam RepositoryParam) *Repository {
 		ProductRepository:     productRepository,
 		TransactionRepository: transactionRepository,
 		MerchantSQLRepository: merchantSQLRepository,
-		// RedisRepository:       redisRepository,
 		MentorRepository:      mentorRepository,
 		ExperienceRepository:  experienceRepository,
 		CategoryRepository:    categoryRepository,

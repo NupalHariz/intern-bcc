@@ -45,8 +45,6 @@ func (u *MentorUsecase) GetMentor(mentorParam domain.MentorParam) (domain.Mentor
 		return domain.MentorResponse{}, response.NewError(http.StatusNotFound, "an error occured when get mentors", err)
 	}
 
-	fmt.Println(mentor.Experiences)
-
 	mentorResponse := domain.MentorResponse{
 		Id:          mentor.Id,
 		Name:        mentor.Name,

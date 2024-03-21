@@ -2,6 +2,9 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"time"
 
 	"intern-bcc/domain"
 	"log"
@@ -29,14 +32,20 @@ func NewInformationRepository(db *gorm.DB, redis redis.IRedis) IInformationRepos
 }
 
 func (r *InformationRepository) GetArticles(ctx context.Context, articles *[]domain.Articles) error {
-	result, err := r.redis.GetArticles(ctx, "Articles")
+	key := fmt.Sprintf(KeySetInformationNmentor, "Articles")
+	stringArticles, err := r.redis.GetRedis(ctx, key)
 	if err != nil {
 		err = r.db.Model(domain.Information{}).Where("category_id = ?", 7).Order("created_at desc").Limit(15).Find(articles).Error
 		if err != nil {
 			return err
 		}
 
-		err = r.redis.SetInformationNmentor(ctx, "Articles", *articles)
+		byteArticles, err := json.Marshal(articles)
+		if err != nil {
+			return nil
+		}
+
+		err = r.redis.SetRedis(ctx, key, string(byteArticles), 5*time.Minute)
 		if err != nil {
 			log.Printf("error redis %v", err)
 		}
@@ -44,19 +53,28 @@ func (r *InformationRepository) GetArticles(ctx context.Context, articles *[]dom
 		return nil
 	}
 
-	*articles = result
+	err = json.Unmarshal([]byte(stringArticles), articles)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (r *InformationRepository) GetWebinarNCompetition(ctx context.Context, webinarNCompetition *[]domain.Information) error {
-	result, err := r.redis.GetWebinarNCompetition(ctx, "WebinarNCompetition")
+	key := fmt.Sprintf(KeySetInformationNmentor, "WebinarNCompetition")
+	stringWebinerNCompetition, err := r.redis.GetRedis(ctx, key)
 	if err != nil {
 		err := r.db.Model(domain.Information{}).Where("category_id IN (?)", []int64{8, 9}).Limit(15).Order("created_at desc").Preload("Category").Find(webinarNCompetition).Error
 		if err != nil {
 			return err
 		}
 
-		err = r.redis.SetInformationNmentor(ctx, "WebinarNCompetition", *webinarNCompetition)
+		byteWebinarNCompetition, err := json.Marshal(webinarNCompetition)
+		if err != nil {
+			return nil
+		}
+
+		err = r.redis.SetRedis(ctx, key, string(byteWebinarNCompetition), 5*time.Minute)
 		if err != nil {
 			log.Printf("error redis %v", err)
 		}
@@ -64,7 +82,10 @@ func (r *InformationRepository) GetWebinarNCompetition(ctx context.Context, webi
 		return nil
 	}
 
-	*webinarNCompetition = result
+	err = json.Unmarshal([]byte(stringWebinerNCompetition), webinarNCompetition)
+	if err != nil {
+		return nil
+	}
 	return nil
 }
 

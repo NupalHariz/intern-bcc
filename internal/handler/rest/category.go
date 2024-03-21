@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/pkg/response"
 	"net/http"
@@ -20,7 +19,6 @@ func (r *Rest) CreateCategory(c *gin.Context) {
 
 	err = r.usecase.CategoryUsecase.CreateCategory(categoryRequest)
 	if err != nil {
-		fmt.Println(err, "error handler")
 		response.Failed(c, err)
 		return
 	}
