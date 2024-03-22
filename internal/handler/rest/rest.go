@@ -25,9 +25,7 @@ func NewRest(c *gin.Engine, usecase *usecase.Usecase, middleware middleware.IMid
 }
 
 func (r *Rest) MountEndpoint() {
-	version := os.Getenv("VERSION")
-	path := fmt.Sprintf("api/%v", version)
-	routerGroup := r.router.Group(path, r.middleware.LogEvent)
+	routerGroup := r.router.Group("api/v1", r.middleware.LogEvent)
 
 	routerGroup.POST("/register", r.Register)
 	routerGroup.POST("/login", r.Login)
@@ -90,10 +88,9 @@ func (r *Rest) MountEndpoint() {
 }
 
 func (r *Rest) Run() {
-	address := os.Getenv("APP_ADDRESS")
-	port := os.Getenv("APP_PORT")
+	port := os.Getenv("PORT")
 
-	err := r.router.Run(fmt.Sprintf("%s:%s", address, port))
+	err := r.router.Run(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatal("failed to run router")
 	}

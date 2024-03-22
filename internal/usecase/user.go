@@ -281,15 +281,13 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 		return response.NewError(http.StatusInternalServerError, "error occured when send email", err)
 	}
 
-	address := os.Getenv("APP_ADDRESS")
-	host := os.Getenv("APP_PORT")
-	version := os.Getenv("VERSION")
-	domainName := fmt.Sprintf("%v:%v", address, host)
+	port := os.Getenv("PORT")
+	domainName := fmt.Sprintf(":%v", port)
 
 	subject := "Account Recovery"
 	htmlBody := `<html>
 	<h1>Click Link to Change Password</h1>
-	<h2><a href="http://` + domainName + `/api/` + version + `/recoveryaccount/` + userName + `/` + emailVerPassword + `">click here</a></h2>
+	<h2><a href="http://` + domainName + `/api/v1/recoveryaccount/` + userName + `/` + emailVerPassword + `">click here</a></h2>
 	</html>`
 
 	err = u.goMail.SendGoMail(subject, htmlBody, user.Email)
