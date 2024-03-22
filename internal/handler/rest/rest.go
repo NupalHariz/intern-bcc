@@ -90,10 +90,9 @@ func (r *Rest) MountEndpoint() {
 }
 
 func (r *Rest) Run() {
-	address := os.Getenv("APP_ADDRESS")
-	port := os.Getenv("APP_PORT")
+	port := os.Getenv("PORT")
 
-	err := r.router.Run(fmt.Sprintf("%s:%s", address, port))
+	err := r.router.Run(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatal("failed to run router")
 	}

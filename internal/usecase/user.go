@@ -281,10 +281,9 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 		return response.NewError(http.StatusInternalServerError, "error occured when send email", err)
 	}
 
-	address := os.Getenv("APP_ADDRESS")
-	host := os.Getenv("APP_PORT")
+	port := os.Getenv("PORT")
 	version := os.Getenv("VERSION")
-	domainName := fmt.Sprintf("%v:%v", address, host)
+	domainName := fmt.Sprintf(":%v", port)
 
 	subject := "Account Recovery"
 	htmlBody := `<html>
