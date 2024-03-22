@@ -6,7 +6,9 @@ import (
 	"intern-bcc/pkg/middleware"
 	"log"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,6 +27,16 @@ func NewRest(c *gin.Engine, usecase *usecase.Usecase, middleware middleware.IMid
 }
 
 func (r *Rest) MountEndpoint() {
+	r.router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"*"},
+		AllowHeaders:     []string{"*"},
+		ExposeHeaders:    []string{"*"},
+		AllowCredentials: true,
+
+		MaxAge: 12 * time.Hour,
+	}))
+
 	routerGroup := r.router.Group("api/v1", r.middleware.LogEvent)
 
 	routerGroup.POST("/register", r.Register)
