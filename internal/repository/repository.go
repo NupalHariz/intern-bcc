@@ -1,15 +1,17 @@
 package repository
 
 import (
-	"gorm.io/gorm"
 	"intern-bcc/pkg/redis"
+
+	"gorm.io/gorm"
 )
 
 const (
 	KeySetOtp                = "otp:set:id:%v"
 	KeySetPasswordRecovery   = "recovery:set:name:%v"
 	KeySetInformationNmentor = "get:all:%v"
-	KeySetProducts           = "get:all:product:page:%v:name:%v:province:%v:university:%v:category:%v"
+	KeySetProducts           = "get:all:product:%v"
+	Limit                    = 6
 )
 
 type Repository struct {

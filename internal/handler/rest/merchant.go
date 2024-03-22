@@ -11,7 +11,7 @@ import (
 
 func (r *Rest) GetMerchant(c *gin.Context) {
 	merchant, err := r.usecase.MerchantUsecase.GetMerchant(c)
-	if err != nil{
+	if err != nil {
 		response.Failed(c, err)
 		return
 	}
@@ -21,7 +21,6 @@ func (r *Rest) GetMerchant(c *gin.Context) {
 
 func (r *Rest) CreateMerchant(c *gin.Context) {
 	var merchantRequest domain.MerchantRequest
-
 	err := c.ShouldBindJSON(&merchantRequest)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
@@ -86,7 +85,6 @@ func (r *Rest) UpdateMerchant(c *gin.Context) {
 
 	merchant, err := r.usecase.MerchantUsecase.UpdateMerchant(c, merchantId, updateMerchant)
 	if err != nil {
-
 		response.Failed(c, err)
 		return
 	}

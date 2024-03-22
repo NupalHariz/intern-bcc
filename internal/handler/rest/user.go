@@ -14,6 +14,7 @@ func (r *Rest) Register(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&userRequest)
 	if err != nil {
+
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
@@ -33,12 +34,14 @@ func (r *Rest) Login(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&userLogin)
 	if err != nil {
+
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
 	loginRespone, err := r.usecase.UserUsecase.Login(userLogin)
 	if err != nil {
+
 		response.Failed(c, err)
 		return
 	}
@@ -50,13 +53,16 @@ func (r *Rest) GetUser(c *gin.Context) {
 	var userParam domain.UserParam
 	err := c.ShouldBind(&userParam)
 	if err != nil {
+
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
 		return
 	}
 
 	user, err := r.usecase.UserUsecase.GetUser(userParam)
 	if err != nil {
+
 		response.Failed(c, err)
+		return
 	}
 
 	response.Success(c, "success get profile user", user)
@@ -65,6 +71,7 @@ func (r *Rest) GetUser(c *gin.Context) {
 func (r *Rest) GetOwnProducts(c *gin.Context) {
 	products, err := r.usecase.UserUsecase.GetOwnProducts(c)
 	if err != nil {
+
 		response.Failed(c, err)
 		return
 	}
@@ -75,6 +82,7 @@ func (r *Rest) GetOwnProducts(c *gin.Context) {
 func (r *Rest) GetLikeProduct(c *gin.Context) {
 	products, err := r.usecase.UserUsecase.GetLikeProducts(c)
 	if err != nil {
+
 		response.Failed(c, err)
 		return
 	}
@@ -97,6 +105,7 @@ func (r *Rest) UpdateUser(c *gin.Context) {
 	userId, err := uuid.Parse(userIdString)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing user id", err))
+		return
 	}
 	var userUpdate domain.UserUpdate
 
@@ -108,7 +117,6 @@ func (r *Rest) UpdateUser(c *gin.Context) {
 
 	updatedUser, err := r.usecase.UserUsecase.UpdateUser(c, userId, userUpdate)
 	if err != nil {
-
 		response.Failed(c, err)
 		return
 	}
@@ -121,6 +129,7 @@ func (r *Rest) UploadUserPhoto(c *gin.Context) {
 	userId, err := uuid.Parse(userIdString)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing user id", err))
+		return
 	}
 
 	profilePicture, err := c.FormFile("profile_picture")
@@ -183,6 +192,7 @@ func (r *Rest) LikeProduct(c *gin.Context) {
 	productId, err := uuid.Parse(productIdString)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing product id", err))
+		return
 	}
 
 	err = r.usecase.UserUsecase.LikeProduct(c, productId)
@@ -199,6 +209,7 @@ func (r *Rest) DeleteLikeProduct(c *gin.Context) {
 	productId, err := uuid.Parse(productIdString)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing product id", err))
+		return
 	}
 
 	err = r.usecase.UserUsecase.DeleteLikeProduct(c, productId)

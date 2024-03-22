@@ -31,7 +31,12 @@ func NewProductRepository(db *gorm.DB, redis redis.IRedis) IProductRepository {
 }
 
 func (r *ProductRepository) GetProducts(c *gin.Context, ctx context.Context, product *[]domain.Products, productParam domain.ProductParam) error {
-	key := fmt.Sprintf(KeySetProducts, productParam.Page, productParam.Name, productParam.ProvinceId, productParam.UniversityId, productParam.CategoryId)
+	byteParam, err := json.Marshal(productParam)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf(KeySetProducts, string(byteParam))
 	stringData, err := r.redis.GetRedis(ctx, key)
 	if err != nil {
 		err := r.db.
@@ -39,7 +44,7 @@ func (r *ProductRepository) GetProducts(c *gin.Context, ctx context.Context, pro
 			Joins("JOIN universities ON universities.id = merchants.university_id").
 			Joins("JOIN provinces ON provinces.id = merchants.province_id").
 			Where("IF(? != 0, universities.id = ?, 1) AND IF(? != 0, provinces.id = ?, 1)", productParam.UniversityId, productParam.UniversityId, productParam.ProvinceId, productParam.ProvinceId).
-			Limit(6).
+			Limit(Limit).
 			Offset(productParam.Offset).
 			Preload("Merchant.University").
 			Preload("Merchant.Province").
@@ -55,8 +60,10 @@ func (r *ProductRepository) GetProducts(c *gin.Context, ctx context.Context, pro
 
 		err = r.redis.SetRedis(ctx, key, string(byteProduct), 5*time.Minute)
 		if err != nil {
+			// log.Printf("error redis %v", err)
 			return err
 		}
+
 		return nil
 	}
 

@@ -13,6 +13,7 @@ func (r *Rest) CreateProvince(c *gin.Context) {
 	err := c.ShouldBindJSON(&provinceRequest)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
 	}
 
 	err = r.usecase.ProvinceUsecase.CreateProvince(provinceRequest)

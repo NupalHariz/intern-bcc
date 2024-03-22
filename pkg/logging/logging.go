@@ -1,18 +1,16 @@
 package logging
 
 import (
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
 type ILogging interface {
-	Info(c *gin.Context, message string, time time.Duration, responseBody interface{})
-	Error(c *gin.Context, message string, err error)
+	Info(c *gin.Context, statusCode int, executionTime float64)
+	Error(c *gin.Context, statusCode int, executionTime float64, err error)
 	InfoLn(message string)
 	ErrorLn(err error)
-	WarnLn(message string)
+	WarnLn(err error)
 }
 
 type Logging struct {
@@ -30,23 +28,21 @@ func LoggingInit() ILogging {
 	return &Logging{logrus: logger}
 }
 
-func (l *Logging) Info(c *gin.Context, message string, time time.Duration, responseBody interface{}) {
+func (l *Logging) Info(c *gin.Context, statusCode int, executionTime float64) {
 	l.logrus.WithFields(logrus.Fields{
-		"path":          c.Request.RequestURI,
-		"response_body": responseBody,
-		"duration":      time.Seconds(),
-	}).Info(message)
+		"success":     true,
+		"status_code": statusCode,
+		"duration":    executionTime,
+	}).Info()
 }
 
-func (l *Logging) Error(c *gin.Context, message string, err error) {
+func (l *Logging) Error(c *gin.Context, statusCode int, executionTime float64, err error) {
 	l.logrus.WithFields(logrus.Fields{
-		"path":  c.Request.RequestURI,
-		"error": err.Error(),
-	}).Error(message)
-}
-
-func (l *Logging) WarnLn(message string) {
-	l.logrus.Warnln(message)
+		"success":     false,
+		"status_code": statusCode,
+		"duration":    executionTime,
+		"error":       err,
+	}).Error()
 }
 
 func (l *Logging) ErrorLn(err error) {
@@ -55,4 +51,8 @@ func (l *Logging) ErrorLn(err error) {
 
 func (l *Logging) InfoLn(message string) {
 	l.logrus.Println(message)
+}
+
+func(l *Logging) WarnLn(err error) {
+	l.logrus.Warningln(err)
 }

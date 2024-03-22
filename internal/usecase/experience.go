@@ -8,7 +8,7 @@ import (
 )
 
 type IExperieceUsecase interface {
-	AddExperience(experience domain.ExperienceRequest, mentorParam domain.MentorParam) error
+	AddExperience(experience domain.Experiences, mentorParam domain.MentorParam) error
 }
 
 type ExperienceUsecase struct {
@@ -19,7 +19,7 @@ func NewExperienceRepository(experienceRepository repository.IExperienceReposito
 	return &ExperienceUsecase{experienceRepository}
 }
 
-func (u *ExperienceUsecase) AddExperience(experienceRequest domain.ExperienceRequest, mentorParam domain.MentorParam) error {
+func (u *ExperienceUsecase) AddExperience(experienceRequest domain.Experiences, mentorParam domain.MentorParam) error {
 	experience := domain.Experiences{
 		Experience: experienceRequest.Experience,
 		MentorId:   mentorParam.Id,

@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"intern-bcc/domain"
 	"intern-bcc/internal/repository"
 	"intern-bcc/pkg/response"
@@ -21,14 +20,11 @@ func NewProvinceUsecase(provinceRepository repository.IProvinceRepository) IProv
 }
 
 func (u *ProvinceUsecase) CreateProvince(provinceRequest domain.Province) error {
-	var province domain.Province
-	err := u.provinceRepository.GetProvince(&province, domain.Province{Province: provinceRequest.Province})
-	if err == nil {
-		return response.NewError(http.StatusBadRequest, "province already exist", errors.New("can not make the same province"))
+	province := domain.Province{
+		Province: provinceRequest.Province,
 	}
 
-	province.Province = provinceRequest.Province
-	err = u.provinceRepository.CreateProvince(&province)
+	err := u.provinceRepository.CreateProvince(&province)
 	if err != nil {
 		return response.NewError(http.StatusInternalServerError, "an error occured when create province", err)
 	}

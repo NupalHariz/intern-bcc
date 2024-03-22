@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"intern-bcc/domain"
 	"intern-bcc/pkg/redis"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,7 +57,8 @@ func (r *MentorRepository) GetMentors(ctx context.Context, mentors *[]domain.Men
 
 		err = r.redis.SetRedis(ctx, key, string(byteMentors), 5*time.Minute)
 		if err != nil {
-			log.Fatalf("redis error %v", err)
+			// log.Printf("error redis %v", err)
+			return err
 		}
 
 		return nil

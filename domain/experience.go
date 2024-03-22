@@ -8,7 +8,7 @@ import (
 
 type Experiences struct {
 	MentorId   uuid.UUID `json:"-"`
-	Experience string    `json:"-"`
+	Experience string    `json:"experience" binding:"required"`
 	CreatedAt  time.Time `json:"-"`
 	UpdatedAt  time.Time `json:"-"`
 }

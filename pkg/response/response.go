@@ -26,6 +26,7 @@ func NewError(code int, message string, err error) error {
 }
 
 func Failed(c *gin.Context, err error) {
+	c.Set("error", err)
 	errorObject := err.(*ErrorObject)
 	c.JSON(errorObject.Code, gin.H{
 		"status":  "error",

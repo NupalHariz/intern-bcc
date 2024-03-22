@@ -31,12 +31,12 @@ type UserLikeProduct struct {
 type ProductParam struct {
 	Id           uuid.UUID `json:"-"`
 	MerchantId   int       `json:"-"`
-	CategoryId   int       `json:"-" form:"categoryId"`
-	Name         string    `json:"-" form:"name"`
-	ProvinceId   int       `json:"-" form:"province" gorm:"-"`
-	UniversityId int       `json:"-" form:"university" gorm:"-"`
-	Page         int       `json:"-" form:"page" gorm:"-"`
-	Offset       int       `json:"-" gorm:"-"`
+	CategoryId   int       `json:"categoryId" form:"categoryId"`
+	Name         string    `json:"name" form:"name"`
+	ProvinceId   int       `json:"province_id" form:"province" gorm:"-"`
+	UniversityId int       `json:"university_id" form:"university" gorm:"-"`
+	Page         int       `json:"page" form:"page" gorm:"-"`
+	Offset       int       `json:"offset" gorm:"-"`
 }
 
 type ProductRequest struct {

@@ -17,11 +17,14 @@ func (r *Rest) CreateTransaction(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&transactionRequest)
 	if err != nil {
+
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
 	}
 
 	coreApiRes, err := r.usecase.TransactionUsecase.CreateTransaction(c, mentorId, transactionRequest)
 	if err != nil {
+
 		response.Failed(c, err)
 		return
 	}
@@ -35,6 +38,7 @@ func (r *Rest) VerifyTransaction(c *gin.Context) {
 	err := c.ShouldBindJSON(&payLoad)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
 	}
 
 	err = r.usecase.TransactionUsecase.VerifyTransaction(payLoad)

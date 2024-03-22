@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"intern-bcc/domain"
-	"log"
 
 	"intern-bcc/pkg/redis"
 
@@ -47,7 +46,8 @@ func (r *InformationRepository) GetArticles(ctx context.Context, articles *[]dom
 
 		err = r.redis.SetRedis(ctx, key, string(byteArticles), 5*time.Minute)
 		if err != nil {
-			log.Printf("error redis %v", err)
+			// log.Printf("error redis %v", err)
+			return err
 		}
 
 		return nil
@@ -76,7 +76,8 @@ func (r *InformationRepository) GetWebinarNCompetition(ctx context.Context, webi
 
 		err = r.redis.SetRedis(ctx, key, string(byteWebinarNCompetition), 5*time.Minute)
 		if err != nil {
-			log.Printf("error redis %v", err)
+			// log.Printf("error redis %v", err)
+			return err
 		}
 
 		return nil

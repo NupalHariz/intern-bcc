@@ -46,6 +46,7 @@ func (r *Rest) CreateInformation(c *gin.Context) {
 	err := c.ShouldBindJSON(&informationRequest)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
 	}
 
 	err = r.usecase.InformationUsecase.CreateInformation(informationRequest)

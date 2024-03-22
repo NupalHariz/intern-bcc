@@ -16,7 +16,7 @@ func (r *Rest) AddExperience(c *gin.Context) {
 		Id: mentorId,
 	}
 
-	var experienceRequest domain.ExperienceRequest
+	var experienceRequest domain.Experiences
 
 	err := c.ShouldBindJSON(&experienceRequest)
 	if err != nil {

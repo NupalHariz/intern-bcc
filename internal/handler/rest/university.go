@@ -9,10 +9,11 @@ import (
 )
 
 func (r *Rest) CreateUniversity(c *gin.Context) {
-	var universityRequest domain.UniversityRequest
+	var universityRequest domain.Universities
 	err := c.ShouldBindJSON(&universityRequest)
 	if err != nil {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		return
 	}
 
 	err = r.usecase.UniversityUsecase.CreateUniversity(universityRequest)

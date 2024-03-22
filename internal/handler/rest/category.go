@@ -9,7 +9,7 @@ import (
 )
 
 func (r *Rest) CreateCategory(c *gin.Context) {
-	var categoryRequest domain.CategoryRequest
+	var categoryRequest domain.Categories
 
 	err := c.ShouldBindJSON(&categoryRequest)
 	if err != nil {
