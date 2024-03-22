@@ -34,12 +34,10 @@ func (r *Rest) MountEndpoint() {
 	routerGroup.GET("/recoveryaccount", r.PasswordRecovery)
 	routerGroup.PATCH("/recoveryaccount/:name/:verPass", r.ChangePassword)
 
-	//User Endpoint
 	user := routerGroup.Group("/user")
 	user.PATCH("/:userId", r.middleware.Authentication, r.UpdateUser)
 	user.PATCH("/:userId/upload-photo", r.middleware.Authentication, r.UploadUserPhoto)
 
-	//Profile Endpoint
 	profile := routerGroup.Group("/profile")
 	profile.GET("/:userId", r.middleware.Authentication, r.GetUser)
 	profile.GET("/favourite", r.middleware.Authentication, r.GetLikeProduct)
@@ -48,7 +46,6 @@ func (r *Rest) MountEndpoint() {
 	profile.GET("/product/:productId", r.middleware.Authentication, r.GetOwnProduct)
 	profile.GET("/mentor", r.middleware.Authentication, r.GetOwnMentors)
 
-	//Merchant Endpoint
 	merchant := routerGroup.Group("/merchant")
 	merchant.POST("/", r.middleware.Authentication, r.CreateMerchant)
 	merchant.GET("/verify", r.middleware.Authentication, r.SendOtp)
@@ -56,7 +53,6 @@ func (r *Rest) MountEndpoint() {
 	merchant.PATCH("/:merchantId", r.middleware.Authentication, r.UpdateMerchant)
 	merchant.PATCH("/:merchantId/upload-photo", r.middleware.Authentication, r.UploadMerchantPhoto)
 
-	//Mentor Endpoint
 	mentor := routerGroup.Group("/mentor")
 	mentor.GET("/:mentorId", r.GetMentor)
 	mentor.GET("/", r.GetMentors)
@@ -67,7 +63,6 @@ func (r *Rest) MountEndpoint() {
 	mentor.POST("/:mentorId/experience", r.middleware.Authentication, r.middleware.OnlyAdmin, r.AddExperience)
 	mentor.POST("/payment-callback", r.VerifyTransaction)
 
-	//Product Endpoint
 	product := routerGroup.Group("/product")
 	product.GET("/:productId", r.GetProduct)
 	product.GET("/", r.GetProducts)
@@ -77,7 +72,6 @@ func (r *Rest) MountEndpoint() {
 	product.POST("/:productId", r.middleware.Authentication, r.LikeProduct)
 	product.DELETE("/:productId", r.middleware.Authentication, r.DeleteLikeProduct)
 
-	//Information Endpoint
 	information := routerGroup.Group("/information")
 	information.GET("/", r.GetInformations)
 	information.GET("/:informationId", r.GetArticle)
@@ -85,15 +79,12 @@ func (r *Rest) MountEndpoint() {
 	information.PATCH("/:informationId", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UpdateInformation)
 	information.PATCH("/:informationId/upload-photo", r.middleware.Authentication, r.middleware.OnlyAdmin, r.UploadInformationPhoto)
 
-	//Category Endpoint
 	category := routerGroup.Group("/category")
 	category.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateCategory)
 
-	//Province Endpoint
 	province := routerGroup.Group("/province")
 	province.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateProvince)
 
-	//University Endpoint
 	university := routerGroup.Group("/university")
 	university.POST("/", r.middleware.Authentication, r.middleware.OnlyAdmin, r.CreateUniversity)
 }

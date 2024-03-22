@@ -30,7 +30,6 @@ func main() {
 	database.ConnectToDB()
 	database.Migrate()
 
-	//pkg
 	jwt := jwt.JwtInit()
 	goMail := gomail.GoMailInit()
 	midTrans := midtrans.MidTransInit()
@@ -38,10 +37,8 @@ func main() {
 	redis := redis.RedisInit(redis.RDB)
 	logging := 	logging.LoggingInit()
 
-	//Repository
 	repository := repository.NewRepository(database.DB, repository.RepositoryParam{Redis: redis})
 
-	//Usecase
 	usecase := usecase.NewUsecase(usecase.UsecaseParam{
 		Repository: repository,
 		Jwt:        jwt,
@@ -51,11 +48,9 @@ func main() {
 		Redis:      redis,
 	})
 
-	//Middleware
 	middleware := middleware.MiddlerwareInit(jwt, usecase, logging)
 	infrastucture.SeedData(database.DB)
 
-	//Rest
 	rest := rest.NewRest(gin.New(), usecase, middleware)
 
 	rest.MountEndpoint()

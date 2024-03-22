@@ -60,7 +60,6 @@ func (r *ProductRepository) GetProducts(c *gin.Context, ctx context.Context, pro
 
 		err = r.redis.SetRedis(ctx, key, string(byteProduct), 5*time.Minute)
 		if err != nil {
-			// log.Printf("error redis %v", err)
 			return err
 		}
 

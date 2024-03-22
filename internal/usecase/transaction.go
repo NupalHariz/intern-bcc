@@ -50,7 +50,6 @@ func (u *TransactionUsecase) CreateTransaction(c *gin.Context, mentorId uuid.UUI
 		return domain.TransactionResponse{}, response.NewError(http.StatusNotFound, "an error occured when create transaction", err)
 	}
 
-	//Null value for Payed_At
 	layoutFormat := "2006-01-02 15:04:05"
 	nullTime, err := time.Parse(layoutFormat, "1970-01-01 00:00:01")
 	if err != nil {

@@ -57,7 +57,6 @@ func (r *MentorRepository) GetMentors(ctx context.Context, mentors *[]domain.Men
 
 		err = r.redis.SetRedis(ctx, key, string(byteMentors), 5*time.Minute)
 		if err != nil {
-			// log.Printf("error redis %v", err)
 			return err
 		}
 
