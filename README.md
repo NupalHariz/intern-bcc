@@ -17,12 +17,12 @@ Log: Logrus
 Mailing: GoMail  
   
 ## Installation  
-git clone github.com/Kruzei/intern-bcc  
-rename .env.example to .env  
-fill the .env with your credential  
-turn on redis server  
-set up your callback-payment on midtrans  
-run the code with go run .\cmd\app\main.go  
+- git clone github.com/Kruzei/intern-bcc  
+- rename .env.example to .env  
+- fill the .env with your credential  
+- turn on redis server  
+- set up your callback-payment on midtrans  
+- run the code with go run .\cmd\app\main.go  
   
 ## Documentation  
-https://documenter.getpostman.com/view/32186007/2sA2xpSp8D#intro  
+[Postman Documentation](https://documenter.getpostman.com/view/32186007/2sA2xpSp8D#intro)  
