@@ -36,7 +36,7 @@ type UserLogin struct {
 }
 
 type UserParam struct {
-	Id    uuid.UUID `json:"-" uri:"userId"`
+	Id    uuid.UUID `json:"id"`
 	Email string    `json:"email"`
 	Name  string    `json:"name"`
 }
@@ -57,6 +57,16 @@ type UserUpdate struct {
 type PasswordUpdate struct {
 	Password        string `json:"password" binding:"required,min=8,max=15"`
 	ConfirmPassword string `json:"confirm_password" binding:"required,min=8,max=15"`
+}
+
+type UserResponse struct {
+	Id             uuid.UUID `json:"id"`
+	Name           string    `json:"name"`
+	Email          string    `json:"email"`
+	Gender         string    `json:"gender"`
+	PlaceBirth     string    `json:"place_birth"`
+	DateBirth      string    `json:"date_birth"`
+	ProfilePicture string    `json:"profile_picture"`
 }
 
 type LikeProduct struct {

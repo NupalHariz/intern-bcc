@@ -51,11 +51,15 @@ func (u *MentorUsecase) GetMentor(mentorParam domain.MentorParam) (domain.Mentor
 		CurrentJob:  mentor.CurrentJob,
 		Description: mentor.Description,
 		Price:       mentor.Price,
-		Experiences: []string{
-			mentor.Experiences[0].Experience,
-			mentor.Experiences[1].Experience,
-			mentor.Experiences[2].Experience,
-		},
+	}
+
+	if len(mentor.Experiences) > 0 {
+		mentorResponse.Experiences = []string{mentor.Experiences[0].Experience}
+		for i, e := range mentor.Experiences {
+			if i > 0 {
+			mentorResponse.Experiences = append(mentorResponse.Experiences, e.Experience)
+			}
+		}
 	}
 
 	return mentorResponse, nil

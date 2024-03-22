@@ -29,8 +29,8 @@ type IUserUsecase interface {
 	GetOwnMentors(c *gin.Context) ([]domain.OwnMentorResponses, error)
 	Register(userRequest domain.UserRequest) error
 	Login(userLogin domain.UserLogin) (domain.LoginResponse, error)
-	UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.Users, error)
-	UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) (domain.Users, error)
+	UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.UserResponse, error)
+	UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) (domain.UserResponse, error)
 	PasswordRecovery(userParam domain.UserParam, ctx context.Context) error
 	ChangePassword(ctx context.Context, name string, verPass string, passwordRequest domain.PasswordUpdate) error
 	LikeProduct(c *gin.Context, productId uuid.UUID) error
@@ -60,7 +60,7 @@ func (u *UserUsecase) GetUser(param domain.UserParam) (domain.Users, error) {
 	var user domain.Users
 	err := u.userRepository.GetUser(&user, param)
 	if err != nil {
-		return user, response.NewError(http.StatusNotFound, "an error occured when get user", err)
+		return domain.Users{}, response.NewError(http.StatusNotFound, "an error occured when get user", err)
 	}
 
 	return user, nil
@@ -195,44 +195,54 @@ func (u *UserUsecase) Login(userLogin domain.UserLogin) (domain.LoginResponse, e
 	return loginUser, nil
 }
 
-func (u *UserUsecase) UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.Users, error) {
+func (u *UserUsecase) UpdateUser(c *gin.Context, userId uuid.UUID, userUpdate domain.UserUpdate) (domain.UserResponse, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.Users{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
+		return domain.UserResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	if userId != user.Id {
-		return domain.Users{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not change other people profile"))
+		return domain.UserResponse{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not change other people profile"))
 	}
 
 	err = u.userRepository.UpdateUser(&userUpdate, userId)
 	if err != nil {
-		return domain.Users{}, response.NewError(http.StatusInternalServerError, "error occured when update user", err)
+		return domain.UserResponse{}, response.NewError(http.StatusInternalServerError, "error occured when update user", err)
 	}
 
 	var updatedUser domain.Users
 	err = u.userRepository.GetUser(&updatedUser, domain.UserParam{Id: userId})
 	if err != nil {
-		return domain.Users{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated user", err)
+		return domain.UserResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated user", err)
 	}
 
-	return updatedUser, nil
+	updatedUserResponse := domain.UserResponse{
+		Id:         updatedUser.Id,
+		Name:       updatedUser.Name,
+		Email:      updatedUser.Email,
+		Gender:     updatedUser.Gender,
+		PlaceBirth: updatedUser.PlaceBirth,
+		DateBirth:  updatedUser.DateBirth,
+		ProfilePicture: updatedUser.ProfilePicture,
+	}
+
+	return updatedUserResponse, nil
 }
 
-func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) (domain.Users, error) {
+func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhoto *multipart.FileHeader) (domain.UserResponse, error) {
 	user, err := u.jwt.GetLoginUser(c)
 	if err != nil {
-		return domain.Users{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
+		return domain.UserResponse{}, response.NewError(http.StatusNotFound, "an error occured when get login user", err)
 	}
 
 	if user.Id != userId {
-		return domain.Users{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not change other people profile"))
+		return domain.UserResponse{}, response.NewError(http.StatusUnauthorized, "access denied", errors.New("can not change other people profile"))
 	}
 
 	if user.ProfilePicture != "" {
 		err = u.supabase.Delete(user.ProfilePicture)
 		if err != nil {
-			return domain.Users{}, response.NewError(http.StatusInternalServerError, "error occured when deleting old profile picture", err)
+			return domain.UserResponse{}, response.NewError(http.StatusInternalServerError, "error occured when deleting old profile picture", err)
 		}
 	}
 
@@ -241,21 +251,31 @@ func (u *UserUsecase) UploadUserPhoto(c *gin.Context, userId uuid.UUID, userPhot
 
 	newProfilePicture, err := u.supabase.Upload(userPhoto)
 	if err != nil {
-		return domain.Users{}, response.NewError(http.StatusInternalServerError, "failed to upload photo", err)
+		return domain.UserResponse{}, response.NewError(http.StatusInternalServerError, "failed to upload photo", err)
 	}
 
 	err = u.userRepository.UpdateUser(&domain.UserUpdate{ProfilePicture: newProfilePicture}, user.Id)
 	if err != nil {
-		return domain.Users{}, response.NewError(http.StatusInternalServerError, "error occured when update user", err)
+		return domain.UserResponse{}, response.NewError(http.StatusInternalServerError, "error occured when update user", err)
 	}
 
 	var updatedUser domain.Users
 	err = u.userRepository.GetUser(&updatedUser, domain.UserParam{Id: user.Id})
 	if err != nil {
-		return domain.Users{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated user", err)
+		return domain.UserResponse{}, response.NewError(http.StatusInternalServerError, "an error occured when get updated user", err)
 	}
 
-	return updatedUser, nil
+	updatedUserResponse := domain.UserResponse{
+		Id:         updatedUser.Id,
+		Name:       updatedUser.Name,
+		Email:      updatedUser.Email,
+		Gender:     updatedUser.Gender,
+		PlaceBirth: updatedUser.PlaceBirth,
+		DateBirth:  updatedUser.DateBirth,
+		ProfilePicture: updatedUser.ProfilePicture,
+	}
+
+	return updatedUserResponse, nil
 }
 
 func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.Context) error {
@@ -281,8 +301,9 @@ func (u *UserUsecase) PasswordRecovery(userParam domain.UserParam, ctx context.C
 		return response.NewError(http.StatusInternalServerError, "error occured when send email", err)
 	}
 
+	address := os.Getenv("ADDRESS")
 	port := os.Getenv("PORT")
-	domainName := fmt.Sprintf(":%v", port)
+	domainName := fmt.Sprintf("%v:%v", address, port)
 
 	subject := "Account Recovery"
 	htmlBody := `<html>

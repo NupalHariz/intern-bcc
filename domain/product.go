@@ -31,7 +31,7 @@ type UserLikeProduct struct {
 type ProductParam struct {
 	Id           uuid.UUID `json:"-"`
 	MerchantId   int       `json:"-"`
-	CategoryId   int       `json:"categoryId" form:"categoryId"`
+	CategoryId   int       `json:"category_Id" form:"category"`
 	Name         string    `json:"name" form:"name"`
 	ProvinceId   int       `json:"province_id" form:"province" gorm:"-"`
 	UniversityId int       `json:"university_id" form:"university" gorm:"-"`

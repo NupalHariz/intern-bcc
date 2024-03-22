@@ -50,12 +50,15 @@ func (r *Rest) Login(c *gin.Context) {
 }
 
 func (r *Rest) GetUser(c *gin.Context) {
-	var userParam domain.UserParam
-	err := c.ShouldBind(&userParam)
+	userIdString := c.Param("userId")
+	userId, err := uuid.Parse(userIdString)
 	if err != nil {
-
-		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to bind request", err))
+		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing product id", err))
 		return
+	}
+	
+	userParam := domain.UserParam{
+		Id: userId,
 	}
 
 	user, err := r.usecase.UserUsecase.GetUser(userParam)
