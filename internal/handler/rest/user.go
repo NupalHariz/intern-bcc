@@ -56,7 +56,7 @@ func (r *Rest) GetUser(c *gin.Context) {
 		response.Failed(c, response.NewError(http.StatusBadRequest, "failed to parsing product id", err))
 		return
 	}
-	
+
 	userParam := domain.UserParam{
 		Id: userId,
 	}

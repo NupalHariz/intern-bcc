@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"fmt"
 	"intern-bcc/domain"
 	"log"
 	"os"
@@ -45,6 +46,7 @@ func JwtInit() IJwt {
 func (j *jsonWebToken) GenerateToken(userId uuid.UUID) (string, error) {
 	expiredTime, err := strconv.Atoi(os.Getenv("JWT_EXP_TIME"))
 	secretKey := os.Getenv("SECRET_KEY")
+	fmt.Println(expiredTime, "\n\n\n", secretKey)
 	if err != nil {
 		log.Fatal("failed to set jwt expired time")
 	}
