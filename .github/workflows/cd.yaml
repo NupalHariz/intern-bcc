@@ -18,4 +18,4 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            echo testaja
+            echo testaja#2
