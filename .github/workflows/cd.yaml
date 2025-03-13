@@ -1,3 +1,5 @@
+name: 🎯 Deployment Nayla
+
 on:
   workflow_dispatch:
 
